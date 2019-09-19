@@ -4,11 +4,12 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+import java.util.*
 
 @Entity(tableName = "currency_list")
 data class CurrencyList(
-    @PrimaryKey(autoGenerate = true)
-    var id: Int = 0,
+    @PrimaryKey
+    var time: Date = Date(),
     @Embedded(prefix = "usd")
     @SerializedName("USD")
     val unitedStatesDollar: CurrencyValue,
