@@ -58,6 +58,6 @@ dependencies {
     kapt "com.google.dagger:dagger-android-processor:$dagger_version"
 
     testImplementation "junit:junit:$junit_version"
-    androidTestImplementation "androidx.test:runner:$androidx_test_runner_version"
+    androidTestImplementation "androidx.test.ext:junit:$androidx_ext_test_version"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_espresso_version"
 }
