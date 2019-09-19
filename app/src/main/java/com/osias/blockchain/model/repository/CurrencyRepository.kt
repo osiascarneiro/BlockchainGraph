@@ -8,6 +8,9 @@ import com.osias.blockchain.model.remote.Service
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+/**
+ * Interface para expor o erro do servidor
+ */
 interface CurrencyRepositoryErrorDelegate {
     fun onError(error: Error)
 }
