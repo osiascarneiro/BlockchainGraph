@@ -8,21 +8,27 @@ import com.osias.blockchain.model.remote.Service
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+interface CurrencyRepositoryErrorDelegate {
+    fun onError(error: Error)
+}
+
 class CurrencyRepository(
-    val service: Service,
-    val dao: CurrencyDao
+    private val service: Service,
+    private val dao: CurrencyDao
 ) {
 
-    fun getCurrency(period: ChartPeriod): LiveData<List<CurrencyList>> {
-        refreshDb(period)
+    var delegate: CurrencyRepositoryErrorDelegate? = null
+
+    fun getCurrency(): LiveData<List<CurrencyList>> {
+        refreshDb()
         return dao.getCurrencies()
     }
 
-    private fun refreshDb(period: ChartPeriod) {
+    private fun refreshDb() {
         GlobalScope.launch {
-            //TODO: passar o periodo
-            val currency = service.getCurrencyChart(period).execute() ?: return@launch
-            currency.body()?.let { dao.insertCurrency(it) }
+            val currency = service.actualCurrency().execute() ?: return@launch
+            if(!currency.isSuccessful) { delegate?.onError(Error(currency.errorBody().toString())) }
+            else { currency.body()?.let { dao.insertCurrency(it) } }
         }
     }
 

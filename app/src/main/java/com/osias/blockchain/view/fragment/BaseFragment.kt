@@ -7,16 +7,11 @@ import com.osias.blockchain.viewmodel.BaseViewModel
 import com.osias.blockchain.viewmodel.ViewModelFactory
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
-
-interface TitledFragment {
-    fun getTitle(): String
-}
 /**
  * Classe base do projeto,
  * sempre chamar o super do oncreate antes de usar a classe de viewmodel
  */
-abstract class BaseFragment<T: BaseViewModel>(private val cls: Class<T>): Fragment(),
-    TitledFragment {
+abstract class BaseFragment<T: BaseViewModel>(private val cls: Class<T>): Fragment() {
 
     @Inject
     lateinit var viewModelFactory: ViewModelFactory<T>

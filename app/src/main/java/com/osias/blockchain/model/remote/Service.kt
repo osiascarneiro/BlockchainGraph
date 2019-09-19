@@ -11,9 +11,9 @@ import retrofit2.http.Query
 interface Service  {
 
     @GET("ticker")
-    fun actualCurrency(): Call<List<Chart>>
+    fun actualCurrency(): Call<CurrencyList>
 
     @GET("charts/market-price?format=json")
-    fun getCurrencyChart(@Query("timespan") time: ChartPeriod): Call<CurrencyList?>
+    fun getCurrencyChart(@Query("timespan") time: ChartPeriod): Call<Chart>
 
 }

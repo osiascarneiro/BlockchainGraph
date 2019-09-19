@@ -6,16 +6,16 @@ import com.google.gson.annotations.SerializedName
 data class CurrencyValue(
     @ColumnInfo(name = "fifteen_minutes")
     @SerializedName("15m")
-    val fifteenMinutesValue: String,
+    val fifteenMinutesValue: Double,
     @ColumnInfo(name = "buy_value")
     @SerializedName("buy")
-    val buyValue: String,
+    val buyValue: Double,
     @ColumnInfo(name = "sell_value")
     @SerializedName("sell")
-    val sellValue: String,
+    val sellValue: Double,
     @ColumnInfo(name = "last_value")
     @SerializedName("last")
-    val lastValue: String,
+    val lastValue: Double,
     @ColumnInfo(name = "symbol")
     @SerializedName("symbol")
     val symbol: String

@@ -37,7 +37,7 @@ data class CurrencyList(
     @SerializedName("EUR")
     val euro: CurrencyValue,
     @Embedded(prefix = "gpb")
-    @SerializedName("GPB")
+    @SerializedName("GBP")
     val poundSterling: CurrencyValue,
     @Embedded(prefix = "hkd")
     @SerializedName("HKD")
