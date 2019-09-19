@@ -1,10 +1,8 @@
 package com.osias.blockchain.module
 
-import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
 import androidx.room.Room
-import com.osias.blockchain.BuildConfig
 import com.osias.blockchain.BlockchainGraphApplication
+import com.osias.blockchain.BuildConfig
 import com.osias.blockchain.model.local.BancoLocal
 import com.osias.blockchain.model.remote.EnumRetrofitConverterFactory
 import com.osias.blockchain.model.remote.Service
@@ -63,10 +61,5 @@ object ApiModule {
     @Reusable
     fun getDatabase(context: BlockchainGraphApplication): BancoLocal
             = Room.databaseBuilder(context, BancoLocal::class.java, "local_storage").build()
-
-    @JvmStatic
-    @Provides
-    fun getSharedPref(context: BlockchainGraphApplication): SharedPreferences
-            = PreferenceManager.getDefaultSharedPreferences(context)
 
 }
