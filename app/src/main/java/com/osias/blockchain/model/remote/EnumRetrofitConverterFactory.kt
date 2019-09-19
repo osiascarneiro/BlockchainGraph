@@ -1,6 +1,6 @@
 package com.osias.blockchain.model.remote
 
-import com.osias.blockchain.common.utils.EnumUtils.getSerializedNameValue
+import com.osias.blockchain.common.utils.EnumUtils.Companion.getSerializedNameValue
 import retrofit2.Converter
 import retrofit2.Retrofit
 import java.lang.reflect.Type
