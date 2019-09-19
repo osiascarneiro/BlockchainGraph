@@ -1,5 +1,6 @@
 package com.osias.blockchain.model.local.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.osias.blockchain.model.entity.Chart
 
@@ -16,6 +17,6 @@ interface ChartDao {
     fun delete(vararg chart: Chart)
 
     @Query("SELECT * FROM chart")
-    suspend fun getAll(): List<Chart>
+    fun getAll(): LiveData<List<Chart>>
 
 }

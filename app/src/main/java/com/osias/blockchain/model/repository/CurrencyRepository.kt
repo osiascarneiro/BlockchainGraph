@@ -9,19 +9,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
-/**
- * Interface para expor o erro do servidor
- */
-interface CurrencyRepositoryErrorDelegate {
-    fun onError(error: Error)
-}
-
 class CurrencyRepository(
     private val service: Service,
     private val dao: CurrencyDao
-) {
-
-    var delegate: CurrencyRepositoryErrorDelegate? = null
+): BaseRepository() {
 
     fun getCurrency(): LiveData<List<CurrencyList>> {
         refreshDb()

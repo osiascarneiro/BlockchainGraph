@@ -6,6 +6,7 @@ import com.osias.blockchain.BuildConfig
 import com.osias.blockchain.model.local.BancoLocal
 import com.osias.blockchain.model.remote.EnumRetrofitConverterFactory
 import com.osias.blockchain.model.remote.Service
+import com.osias.blockchain.model.repository.ChartRepository
 import com.osias.blockchain.model.repository.CurrencyRepository
 import dagger.Module
 import dagger.Provides
@@ -50,7 +51,14 @@ object ApiModule {
     @JvmStatic
     @Provides
     @Reusable
-    fun getPostsRepository(service: Service, localDb: BancoLocal) = CurrencyRepository(service, localDb.currencyDao())
+    fun getCurrencyRepository(service: Service, localDb: BancoLocal) = CurrencyRepository(service, localDb.currencyDao())
+
+    @JvmStatic
+    @Provides
+    @Reusable
+    fun getChartsRepository(service: Service, localDb: BancoLocal) = ChartRepository(service,
+                                                                        localDb.chartDao(),
+                                                                        localDb.chartPointDao())
 
     @JvmStatic
     @Provides

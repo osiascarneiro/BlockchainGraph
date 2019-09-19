@@ -6,11 +6,13 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.CASCADE
 import com.google.gson.annotations.SerializedName
 
-@Entity(tableName = "chart_point", foreignKeys = [ForeignKey(entity = Chart::class,
-                                                             parentColumns = ["id"],
-                                                             childColumns = ["chartId"],
-                                                             onDelete = CASCADE,
-                                                             onUpdate = CASCADE)])
+@Entity(tableName = "chart_point",
+    primaryKeys = ["x", "y"],
+    foreignKeys = [ForeignKey(entity = Chart::class,
+                              parentColumns = ["id"],
+                              childColumns = ["chart_id"],
+                              onDelete = CASCADE,
+                              onUpdate = CASCADE)])
 data class ChartPoint(
     @SerializedName("x")
     @ColumnInfo(name = "x")
