@@ -19,7 +19,7 @@ class ChartRepository(
 
     fun getCharts(period: ChartPeriod): LiveData<List<Chart>> {
         refreshDb(period)
-        return chartDao.getChartsByTimeAndPeriod(Date(), period)
+        return chartDao.getChartsByPeriod(period)
     }
 
     //O refresh db nao eh chamado pois ja eh atualizado quando chamamos o

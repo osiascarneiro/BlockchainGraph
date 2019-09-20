@@ -18,10 +18,10 @@ import java.util.*
 data class ChartPoint(
     @SerializedName("x")
     @ColumnInfo(name = "x")
-    val pointX: String,
+    val pointX: Float,
     @SerializedName("y")
     @ColumnInfo(name = "y")
-    val pointY: String,
+    val pointY: Float,
     @ColumnInfo(name = "chart_id")
     var chartTime: Date,
     @ColumnInfo(name = "chart_period")

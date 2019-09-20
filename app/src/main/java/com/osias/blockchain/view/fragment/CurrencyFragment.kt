@@ -1,17 +1,23 @@
 package com.osias.blockchain.view.fragment
 
+import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import com.osias.blockchain.R
 import com.osias.blockchain.model.entity.ChartPoint
 import com.osias.blockchain.model.enumeration.ChartPeriod
 import com.osias.blockchain.viewmodel.CurrencyViewModel
 import kotlinx.android.synthetic.main.fragment_actual_currency.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class.java) {
 
@@ -37,8 +43,6 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         viewModel.period.observe(this, Observer {
             getChart(it)
         })
-
-        viewModel.period.value = ChartPeriod.ALL_TIME
     }
 
     private fun getChart(period: ChartPeriod) {
@@ -51,9 +55,19 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
 
     private fun observePoints(points: LiveData<List<ChartPoint>>) {
         points.observe(this, Observer {
-            //TODO: construir grafico
-            Log.d("tag", it.toString())
+            buildGraph(it)
         })
+    }
+
+    private fun buildGraph(points: List<ChartPoint>) {
+        val entries = points.map { Entry(it.pointX, it.pointY) }
+        val dataSet = LineDataSet(entries, "Currency Evolution")
+        dataSet.color = Color.BLACK
+        dataSet.valueTextColor = Color.DKGRAY
+        dataSet.setDrawCircles(false)
+        val lineData = LineData(dataSet)
+        chart.data = lineData
+        chart.invalidate()
     }
 
 }

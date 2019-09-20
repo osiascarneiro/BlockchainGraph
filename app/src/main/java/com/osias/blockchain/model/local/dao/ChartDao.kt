@@ -27,4 +27,7 @@ interface ChartDao {
     @Query("SELECT * FROM chart WHERE id = :time AND period = :period")
     fun getChartsByTimeAndPeriod(time: Date, period: ChartPeriod): LiveData<List<Chart>>
 
+    @Query("SELECT * FROM chart WHERE period = :period")
+    fun getChartsByPeriod(period: ChartPeriod): LiveData<List<Chart>>
+
 }

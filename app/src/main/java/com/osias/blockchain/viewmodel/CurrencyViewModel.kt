@@ -23,7 +23,7 @@ class CurrencyViewModel @Inject constructor(
     override fun refreshItens() {}
 
     fun formatCurrency(value: Double): String {
-        //TODO: Pegar o curency dinamicamente
+        //TODO: Pegar o curency dinamicamente talvez usar o symbol do objeto
         val format = NumberFormat.getCurrencyInstance(Locale.US)
         return format.format(value)
     }
