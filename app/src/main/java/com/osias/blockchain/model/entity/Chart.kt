@@ -13,12 +13,15 @@ import java.util.*
 data class Chart(
     @ColumnInfo(name = "id")
     var time: Date = Date(),
+
     @ColumnInfo(name = "name")
     @SerializedName("name")
     var name: String,
+
     @ColumnInfo(name = "description")
     @SerializedName("description")
     var description: String,
+
     @ColumnInfo(name = "period")
     var period: ChartPeriod
 ) {
