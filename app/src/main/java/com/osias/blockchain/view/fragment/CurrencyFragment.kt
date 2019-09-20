@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.NumberPicker
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.github.mikephil.charting.components.AxisBase
@@ -18,6 +19,7 @@ import com.osias.blockchain.model.entity.ChartPoint
 import com.osias.blockchain.model.entity.CurrencyValue
 import com.osias.blockchain.model.enumeration.ChartPeriod
 import com.osias.blockchain.model.enumeration.CurrencyEnum
+import com.osias.blockchain.view.dialog.CoinPickerDialog
 import com.osias.blockchain.viewmodel.CurrencyViewModel
 import kotlinx.android.synthetic.main.fragment_actual_currency.*
 import kotlinx.coroutines.Dispatchers
@@ -39,9 +41,18 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         return inflater.inflate(R.layout.fragment_actual_currency, container, false)
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        selectCoinButton.setOnClickListener {
+            CoinPickerDialog.newInstance(NumberPicker.OnValueChangeListener { _, _, newVal ->
+                viewModel.coin.value = CurrencyEnum.values()[newVal]
+            }).show(childFragmentManager, "Dialog")
+        }
+    }
+
     private fun bindItems() {
-        //TODO: Adicionar picker de moeda
         viewModel.coin.observe(this, Observer {
+            selectCoinButton.text = getString(R.string.moeda_selecionada, it.symbol)
             getAsyncCurrency(it)
         })
 
@@ -53,14 +64,14 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
     private fun getAsyncCurrency(coin: CurrencyEnum) {
         GlobalScope.launch {
             viewModel.getCurrencyByLocale(coin)?.let { value ->
-                updateLabel(coin, value)
+                updateLabel(value)
             }
         }
     }
 
-    private fun updateLabel(coin: CurrencyEnum, value: CurrencyValue) {
+    private fun updateLabel(value: CurrencyValue) {
         GlobalScope.launch(Dispatchers.Main) {
-            lastCurrencyTitle.text = getString(R.string.ultima_cotacao_formatted, coin.symbol)
+            lastCurrencyTitle.text = getString(R.string.ultima_cotacao_formatted)
             lastCurrency.text = viewModel.formatCurrency(value.lastValue)
         }
     }

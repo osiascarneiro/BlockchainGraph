@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Blockchain Currency Graph</string>
     <string name="ultima_cotacao">Última cotação</string>
-    <string name="ultima_cotacao_formatted">Última cotação (%1$s)</string>
+    <string name="ultima_cotacao_formatted">Última cotação</string>
+    <string name="escolha_uma_moeda">Escolha uma moeda</string>
+    <string name="ok">OK</string>
+    <string name="moeda_selecionada">Moeda selecionada %1$s</string>
 </resources>

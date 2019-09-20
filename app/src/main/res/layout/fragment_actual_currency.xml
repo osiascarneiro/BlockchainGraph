@@ -20,21 +20,34 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/default_margin">
 
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/selectCoinButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/moeda_selecionada"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/lastCurrencyTitle"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/selectCoinButton"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/lastCurrency"
+                android:textSize="24sp"
                 android:text="@string/ultima_cotacao" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/lastCurrency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textSize="24sp"
+                app:layout_constraintStart_toEndOf="@id/lastCurrencyTitle"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/selectCoinButton"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
