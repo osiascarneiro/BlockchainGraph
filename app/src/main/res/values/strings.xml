@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">ProjetoBaseFragment</string>
+    <string name="app_name">Blockchain Currency Graph</string>
     <string name="ultima_cotacao">Última cotação</string>
 </resources>

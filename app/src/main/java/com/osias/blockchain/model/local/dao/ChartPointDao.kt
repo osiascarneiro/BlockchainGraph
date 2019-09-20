@@ -1,7 +1,10 @@
 package com.osias.blockchain.model.local.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.osias.blockchain.model.entity.ChartPoint
+import com.osias.blockchain.model.enumeration.ChartPeriod
+import java.util.*
 
 @Dao
 interface ChartPointDao {
@@ -18,7 +21,7 @@ interface ChartPointDao {
     @Query("SELECT * FROM chart_point")
     suspend fun getAll(): List<ChartPoint>
 
-    @Query("SELECT * FROM chart_point WHERE chart_id = :chartId")
-    suspend fun getAllFromChart(chartId: Long): List<ChartPoint>
+    @Query("SELECT * FROM chart_point WHERE chart_id = :chartId AND chart_period = :period")
+    fun getAllFromChart(chartId: Date, period: ChartPeriod): LiveData<List<ChartPoint>>
 
 }

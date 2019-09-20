@@ -5,12 +5,14 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.CASCADE
 import com.google.gson.annotations.SerializedName
+import com.osias.blockchain.model.enumeration.ChartPeriod
+import java.util.*
 
 @Entity(tableName = "chart_point",
     primaryKeys = ["x", "y"],
     foreignKeys = [ForeignKey(entity = Chart::class,
-                              parentColumns = ["id"],
-                              childColumns = ["chart_id"],
+                              parentColumns = ["id", "period"],
+                              childColumns = ["chart_id", "chart_period"],
                               onDelete = CASCADE,
                               onUpdate = CASCADE)])
 data class ChartPoint(
@@ -21,5 +23,7 @@ data class ChartPoint(
     @ColumnInfo(name = "y")
     val pointY: String,
     @ColumnInfo(name = "chart_id")
-    val chartId: Long
-)
+    var chartTime: Date,
+    @ColumnInfo(name = "chart_period")
+    var chartPeriod: ChartPeriod
+    )

@@ -1,4 +1,4 @@
-package com.osias.base.projetobasefragment
+package com.osias.blockchain
 
 import org.junit.Test
 
