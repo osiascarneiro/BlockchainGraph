@@ -1,6 +1,5 @@
 package com.osias.blockchain.viewmodel
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.osias.blockchain.model.entity.Chart
 import com.osias.blockchain.model.entity.ChartPoint

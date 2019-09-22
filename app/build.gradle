@@ -61,6 +61,9 @@ dependencies {
     kapt "com.google.dagger:dagger-android-processor:$dagger_version"
 
     testImplementation "junit:junit:$junit_version"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_test_version"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_version"
+    testImplementation "androidx.arch.core:core-testing:$lifecycle_version"
     androidTestImplementation "androidx.test.ext:junit:$androidx_ext_test_version"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_espresso_version"
 }

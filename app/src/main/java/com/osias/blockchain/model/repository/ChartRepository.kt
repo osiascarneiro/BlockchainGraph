@@ -11,12 +11,18 @@ import java.util.*
 class ChartRepository(
     private val service: Service,
     private val chartDao: ChartDao,
-    private val chartPointDao: ChartPointDao
+    private val chartPointDao: ChartPointDao,
+    private val dateProvider: DateProvider = object : DateProvider {
+        override fun getDate(): Date {
+            return Date()
+        }
+
+    }
 ): BaseRepository() {
 
     suspend fun getCharts(period: ChartPeriod): Chart {
         refreshDb(period)
-        return chartDao.getChartByTimeAndPeriod(Date(), period)
+        return chartDao.getChartByTimeAndPeriod(dateProvider.getDate(), period)
     }
 
     //O refresh db nao eh chamado pois ja eh atualizado quando chamamos o
@@ -27,7 +33,7 @@ class ChartRepository(
     }
 
     private suspend fun refreshDb(period: ChartPeriod) {
-        val dbChart = chartDao.hasChartByTimeAndPeriod(Date(), period)
+        val dbChart = chartDao.hasChartByTimeAndPeriod(dateProvider.getDate(), period)
         dbChart?.let { return }
 
         val result = service.getCurrencyChart(period).execute()
@@ -36,7 +42,7 @@ class ChartRepository(
         } else {
             result.body()?.let { chart ->
                 chart.period = period
-                chart.time = Date()
+                chart.time = dateProvider.getDate()
                 chartDao.insert(chart)
                 chart.values?.forEach {
                     it.chartTime = chart.time
