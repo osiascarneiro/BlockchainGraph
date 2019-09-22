@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.NumberPicker
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -15,6 +14,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.osias.blockchain.R
+import com.osias.blockchain.model.entity.Chart
 import com.osias.blockchain.model.entity.ChartPoint
 import com.osias.blockchain.model.entity.CurrencyValue
 import com.osias.blockchain.model.enumeration.ChartPeriod
@@ -43,10 +43,23 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
         selectCoinButton.setOnClickListener {
             CoinPickerDialog.newInstance(NumberPicker.OnValueChangeListener { _, _, newVal ->
                 viewModel.coin.value = CurrencyEnum.values()[newVal]
-            }).show(childFragmentManager, "Dialog")
+            }, viewModel.coin.value).show(childFragmentManager, "Dialog")
+        }
+
+        periodSegmentedButton.setOnCheckedChangeListener { _, buttonId ->
+            viewModel.period.value = when(buttonId) {
+                R.id.thirty_days -> ChartPeriod.ONE_MONTH
+                R.id.sixty_days -> ChartPeriod.TWO_MONTHS
+                R.id.one_hundred_eighty_days -> ChartPeriod.SIX_MONTHS
+                R.id.one_year -> ChartPeriod.ONE_YEAR
+                R.id.two_years -> ChartPeriod.TWO_YEARS
+                R.id.all_time -> ChartPeriod.ALL_TIME
+                else -> ChartPeriod.ONE_MONTH
+            }
         }
     }
 
@@ -77,17 +90,15 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
     }
 
     private fun getChart(period: ChartPeriod) {
-        viewModel.getChart(period).observe(this, Observer { charts ->
-            charts.lastOrNull()?.let {
-                observePoints(viewModel.getPoints(it.time, it.period))
-            }
-        })
+        GlobalScope.launch {
+            observePoints(viewModel.getChart(period))
+        }
     }
 
-    private fun observePoints(points: LiveData<List<ChartPoint>>) {
-        points.observe(this, Observer {
-            buildGraph(it)
-        })
+    private fun observePoints(chart: Chart) {
+        GlobalScope.launch(Dispatchers.Main) {
+            buildGraph(viewModel.getPoints(chart.time, chart.period))
+        }
     }
 
     private fun buildGraph(points: List<ChartPoint>) {

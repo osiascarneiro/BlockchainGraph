@@ -27,7 +27,9 @@
                 android:text="@string/moeda_selecionada"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                app:layout_constraintEnd_toEndOf="parent"
+                android:textColor="@android:color/holo_blue_dark"
+                style="@style/Widget.AppCompat.Button.Borderless.Colored"/>
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/lastCurrencyTitle"
@@ -60,8 +62,93 @@
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/default_margin"
         app:layout_constraintTop_toBottomOf="@id/cardCotacoes"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/periodSegmentedButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <RadioGroup
+        android:id="@+id/periodSegmentedButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:checkedButton="@id/thirty_days"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chart">
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/thirty_days"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_margin="@dimen/button_margin"
+            android:background="@drawable/radio_selector"
+            android:button="@android:color/transparent"
+            android:textAlignment="center"
+            android:padding="@dimen/default_margin"
+            android:text="@string/thirty_days"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/sixty_days"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_margin="@dimen/button_margin"
+            android:background="@drawable/radio_selector"
+            android:button="@android:color/transparent"
+            android:textAlignment="center"
+            android:padding="@dimen/default_margin"
+            android:text="@string/sixty_days"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/one_hundred_eighty_days"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_margin="@dimen/button_margin"
+            android:background="@drawable/radio_selector"
+            android:button="@android:color/transparent"
+            android:textAlignment="center"
+            android:padding="@dimen/default_margin"
+            android:text="@string/one_hundred_eighty_days"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/one_year"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_margin="@dimen/button_margin"
+            android:background="@drawable/radio_selector"
+            android:button="@android:color/transparent"
+            android:textAlignment="center"
+            android:padding="@dimen/default_margin"
+            android:text="@string/one_year"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/two_years"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_margin="@dimen/button_margin"
+            android:background="@drawable/radio_selector"
+            android:button="@android:color/transparent"
+            android:textAlignment="center"
+            android:padding="@dimen/default_margin"
+            android:text="@string/two_years"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/all_time"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_margin="@dimen/button_margin"
+            android:background="@drawable/radio_selector"
+            android:button="@android:color/transparent"
+            android:textAlignment="center"
+            android:padding="@dimen/default_margin"
+            android:text="@string/all_time"/>
+
+    </RadioGroup>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

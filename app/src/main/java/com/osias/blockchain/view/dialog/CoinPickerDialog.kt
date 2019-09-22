@@ -10,11 +10,15 @@ import com.osias.blockchain.R
 import com.osias.blockchain.model.enumeration.CurrencyEnum
 import kotlinx.android.synthetic.main.dialog_coin_picker.*
 
-class CoinPickerDialog(val listener: NumberPicker.OnValueChangeListener): DialogFragment() {
+class CoinPickerDialog(
+    private val listener: NumberPicker.OnValueChangeListener,
+    private val selectedItem: CurrencyEnum? = null
+): DialogFragment() {
 
     companion object {
-        fun newInstance(listener: NumberPicker.OnValueChangeListener): CoinPickerDialog {
-            return CoinPickerDialog(listener)
+        fun newInstance(listener: NumberPicker.OnValueChangeListener,
+                        selectedItem: CurrencyEnum?): CoinPickerDialog {
+            return CoinPickerDialog(listener, selectedItem)
         }
     }
 
@@ -36,6 +40,7 @@ class CoinPickerDialog(val listener: NumberPicker.OnValueChangeListener): Dialog
         numberPicker.minValue = 0
         numberPicker.maxValue = CurrencyEnum.values().size -1
         numberPicker.displayedValues = CurrencyEnum.values().map { it.symbol }.toTypedArray()
+        selectedItem?.let { numberPicker.value = it.ordinal }
         numberPicker.setOnValueChangedListener(listener)
     }
 

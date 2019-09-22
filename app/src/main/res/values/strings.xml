@@ -5,4 +5,10 @@
     <string name="escolha_uma_moeda">Escolha uma moeda</string>
     <string name="ok">OK</string>
     <string name="moeda_selecionada">Moeda selecionada %1$s</string>
+    <string name="thirty_days">30 Dias</string>
+    <string name="sixty_days">60 Dias</string>
+    <string name="one_hundred_eighty_days">180 Dias</string>
+    <string name="one_year">1 ano</string>
+    <string name="two_years">2 anos</string>
+    <string name="all_time">Todo o tempo</string>
 </resources>

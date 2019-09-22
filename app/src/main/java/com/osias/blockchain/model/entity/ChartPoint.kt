@@ -9,7 +9,7 @@ import com.osias.blockchain.model.enumeration.ChartPeriod
 import java.util.*
 
 @Entity(tableName = "chart_point",
-    primaryKeys = ["x", "y"],
+    primaryKeys = ["x", "y","chart_id","chart_period"],
     foreignKeys = [ForeignKey(entity = Chart::class,
                               parentColumns = ["id", "period"],
                               childColumns = ["chart_id", "chart_period"],

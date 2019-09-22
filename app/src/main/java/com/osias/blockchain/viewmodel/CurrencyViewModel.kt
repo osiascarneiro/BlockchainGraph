@@ -38,11 +38,11 @@ class CurrencyViewModel @Inject constructor(
         return formatter.format(Date(value.toLong()*1000))
     }
 
-    fun getChart(period: ChartPeriod): LiveData<List<Chart>> {
+    suspend fun getChart(period: ChartPeriod): Chart {
         return chartsRepository.getCharts(period)
     }
 
-    fun getPoints(chartId: Date, chartPeriod: ChartPeriod): LiveData<List<ChartPoint>> {
+    suspend fun getPoints(chartId: Date, chartPeriod: ChartPeriod): List<ChartPoint> {
         return chartsRepository.getChartPoints(chartId, chartPeriod)
     }
 
