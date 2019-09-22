@@ -4,7 +4,7 @@
     <string name="ultima_cotacao_formatted">Última cotação</string>
     <string name="escolha_uma_moeda">Escolha uma moeda</string>
     <string name="ok">OK</string>
-    <string name="moeda_selecionada">Moeda selecionada %1$s</string>
+    <string name="moeda_selecionada">Moeda selecionada %1$s (clique para mudar)</string>
     <string name="thirty_days">30 Dias</string>
     <string name="sixty_days">60 Dias</string>
     <string name="one_hundred_eighty_days">180 Dias</string>
