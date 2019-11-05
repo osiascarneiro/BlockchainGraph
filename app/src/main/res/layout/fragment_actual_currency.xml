@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/selectCoinButton"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/lastUpdate"
                 app:layout_constraintEnd_toStartOf="@id/lastCurrency"
                 android:textSize="24sp"
                 android:text="@string/ultima_cotacao" />
@@ -50,7 +50,20 @@
                 app:layout_constraintStart_toEndOf="@id/lastCurrencyTitle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/selectCoinButton"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintBottom_toTopOf="@id/lastUpdate" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/lastUpdate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/last_update"
+                android:textAlignment="center"
+                android:textSize="12sp"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@id/lastCurrencyTitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

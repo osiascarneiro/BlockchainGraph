@@ -54,8 +54,8 @@ class CurrencyViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        mainScope.cancel(CancellationException())
-        ioScope.cancel(CancellationException())
+        mainScope.cancel(CancellationException("View model terminated"))
+        ioScope.cancel(CancellationException("View model terminated"))
     }
 
 }

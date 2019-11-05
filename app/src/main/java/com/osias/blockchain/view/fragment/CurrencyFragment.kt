@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.NumberPicker
+import androidx.annotation.MainThread
 import androidx.lifecycle.Observer
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -14,6 +15,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.osias.blockchain.R
+import com.osias.blockchain.common.utils.DateUtil
 import com.osias.blockchain.model.entity.Chart
 import com.osias.blockchain.model.entity.ChartPoint
 import com.osias.blockchain.model.entity.CurrencyValue
@@ -22,7 +24,6 @@ import com.osias.blockchain.model.enumeration.CurrencyEnum
 import com.osias.blockchain.view.dialog.CoinPickerDialog
 import com.osias.blockchain.viewmodel.CurrencyViewModel
 import kotlinx.android.synthetic.main.fragment_actual_currency.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class.java),
@@ -76,6 +77,30 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         })
     }
 
+    @MainThread
+    private fun loadingDays(loading: Boolean) {
+        when(viewModel.period.value) {
+            ChartPeriod.ONE_MONTH -> {
+                thirty_days.setText(if(loading) R.string.loading else R.string.thirty_days)
+            }
+            ChartPeriod.TWO_MONTHS -> {
+                sixty_days.setText(if(loading) R.string.loading else R.string.sixty_days)
+            }
+            ChartPeriod.SIX_MONTHS -> {
+                one_hundred_eighty_days.setText(if(loading) R.string.loading else R.string.one_hundred_eighty_days)
+            }
+            ChartPeriod.ONE_YEAR -> {
+                one_year.setText(if(loading) R.string.loading else R.string.one_year)
+            }
+            ChartPeriod.TWO_YEARS -> {
+                two_years.setText(if(loading) R.string.loading else R.string.two_years)
+            }
+            ChartPeriod.ALL_TIME -> {
+                all_time.setText(if(loading) R.string.loading else R.string.all_time)
+            }
+        }
+    }
+
     private fun getAsyncCurrency(coin: CurrencyEnum) {
         viewModel.ioScope.launch {
             viewModel.getCurrencyByLocale(coin)?.let { value ->
@@ -88,19 +113,20 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         viewModel.mainScope.launch {
             lastCurrencyTitle.text = getString(R.string.ultima_cotacao_formatted)
             lastCurrency.text = viewModel.formatCurrency(value.lastValue)
+            lastUpdate.text = getString(R.string.last_update, DateUtil.formatDate(value.time))
         }
     }
 
     private fun getChart(period: ChartPeriod) {
         viewModel.ioScope.launch {
+            viewModel.mainScope.launch { loadingDays(true) }
             observePoints(viewModel.getChart(period))
         }
     }
 
-    private fun observePoints(chart: Chart) {
-        viewModel.ioScope.launch(Dispatchers.Main) {
-            buildGraph(viewModel.getPoints(chart.time, chart.period))
-        }
+    private suspend fun observePoints(chart: Chart) {
+        buildGraph(viewModel.getPoints(chart.time, chart.period))
+        viewModel.mainScope.launch { loadingDays(false) }
     }
 
     private fun buildGraph(points: List<ChartPoint>) {
