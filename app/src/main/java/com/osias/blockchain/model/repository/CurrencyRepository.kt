@@ -23,11 +23,16 @@ class CurrencyRepository(
         return dao.getCurrencyDateAndSymbol(dateProvider.getDate(), currency.symbol)
     }
 
-    private suspend fun refreshDb() {
+    suspend fun forceUpdate(currency: CurrencyEnum): CurrencyValue? {
+        refreshDb(true)
+        return dao.getCurrencyDateAndSymbol(dateProvider.getDate(), currency.symbol)
+    }
+
+    private suspend fun refreshDb(force: Boolean = false) {
         //Limitando a atualizacao dos dados a cada hora
         //TODO: talvez possa ser reduzido
         val dbCurrency = dao.hasCurrencyDate(DateUtil.stripMinutes(dateProvider.getDate()))
-        dbCurrency?.let { return }
+        if(!force && dbCurrency != null) return
 
         val currency = service.actualCurrency().execute()
         if(!currency.isSuccessful) {

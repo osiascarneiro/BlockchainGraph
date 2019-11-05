@@ -33,6 +33,11 @@ class CurrencyViewModel @Inject constructor(
         return currencyRepository.getValueByCurrency(coin)
     }
 
+    suspend fun forceUpdateCurrency(): CurrencyValue? {
+        if(coin.value == null) return null
+        return currencyRepository.forceUpdate(coin.value!!)
+    }
+
     fun formatCurrency(value: Double): String {
         val format = NumberFormat.getCurrencyInstance(Locale.US)
         format.currency = Currency.getInstance(coin.value?.symbol)

@@ -60,6 +60,10 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
                 else -> ChartPeriod.ONE_MONTH
             }
         }
+
+        forceUpdateFab.setOnClickListener {
+            forceUpdateCurrency()
+        }
     }
 
     override fun onValueChange(picker: NumberPicker?, oldValue: Int, newVal: Int) {
@@ -80,30 +84,32 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
     @MainThread
     private fun loadingDays(loading: Boolean) {
         when(viewModel.period.value) {
-            ChartPeriod.ONE_MONTH -> {
+            ChartPeriod.ONE_MONTH ->
                 thirty_days.setText(if(loading) R.string.loading else R.string.thirty_days)
-            }
-            ChartPeriod.TWO_MONTHS -> {
+            ChartPeriod.TWO_MONTHS ->
                 sixty_days.setText(if(loading) R.string.loading else R.string.sixty_days)
-            }
-            ChartPeriod.SIX_MONTHS -> {
+            ChartPeriod.SIX_MONTHS ->
                 one_hundred_eighty_days.setText(if(loading) R.string.loading else R.string.one_hundred_eighty_days)
-            }
-            ChartPeriod.ONE_YEAR -> {
+            ChartPeriod.ONE_YEAR ->
                 one_year.setText(if(loading) R.string.loading else R.string.one_year)
-            }
-            ChartPeriod.TWO_YEARS -> {
+            ChartPeriod.TWO_YEARS ->
                 two_years.setText(if(loading) R.string.loading else R.string.two_years)
-            }
-            ChartPeriod.ALL_TIME -> {
+            ChartPeriod.ALL_TIME ->
                 all_time.setText(if(loading) R.string.loading else R.string.all_time)
-            }
         }
     }
 
     private fun getAsyncCurrency(coin: CurrencyEnum) {
         viewModel.ioScope.launch {
             viewModel.getCurrencyByLocale(coin)?.let { value ->
+                updateLabel(value)
+            }
+        }
+    }
+
+    private fun forceUpdateCurrency() {
+        viewModel.ioScope.launch {
+            viewModel.forceUpdateCurrency()?.let { value ->
                 updateLabel(value)
             }
         }
