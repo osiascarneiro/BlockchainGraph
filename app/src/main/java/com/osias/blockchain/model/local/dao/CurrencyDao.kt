@@ -11,13 +11,13 @@ interface CurrencyDao {
     @Query("SELECT * FROM currency")
     fun getCurrencies(): LiveData<List<CurrencyValue>>
 
-    @Query("SELECT * FROM currency WHERE time = :date LIMIT 1")
+    @Query("SELECT * FROM currency WHERE time >= :date LIMIT 1")
     suspend fun hasCurrencyDate(date: Date): CurrencyValue?
 
-    @Query("SELECT * FROM currency WHERE time = :date")
+    @Query("SELECT * FROM currency WHERE time >= :date")
     suspend fun getCurrencyDate(date: Date): List<CurrencyValue>
 
-    @Query("SELECT * FROM currency WHERE time = :date AND currency_symbol = :currency LIMIT 1")
+    @Query("SELECT * FROM currency WHERE time >= :date AND currency_symbol = :currency ORDER BY time DESC LIMIT 1")
     suspend fun getCurrencyDateAndSymbol(date: Date, currency: String): CurrencyValue?
 
     @Update

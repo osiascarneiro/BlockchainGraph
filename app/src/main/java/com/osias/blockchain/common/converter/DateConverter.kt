@@ -16,7 +16,7 @@ class DateConverter {
         @TypeConverter
         @JvmStatic fun fromDate(date: Date?): Long? {
             date?.let {
-                return DateUtil.stripMinutes(it).time
+                return it.time
             }
             return null
         }

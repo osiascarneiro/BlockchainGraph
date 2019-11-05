@@ -18,14 +18,14 @@ class CurrencyRepository(
 ): BaseRepository() {
 
     suspend fun getValueByCurrency(currency: CurrencyEnum): CurrencyValue? {
-        val currencyDb = dao.getCurrencyDateAndSymbol(dateProvider.getDate(), currency.symbol)
+        val currencyDb = dao.getCurrencyDateAndSymbol(DateUtil.stripMinutes(dateProvider.getDate()), currency.symbol)
         if(currencyDb == null) refreshDb()
-        return dao.getCurrencyDateAndSymbol(dateProvider.getDate(), currency.symbol)
+        return dao.getCurrencyDateAndSymbol(DateUtil.stripMinutes(dateProvider.getDate()), currency.symbol)
     }
 
     suspend fun forceUpdate(currency: CurrencyEnum): CurrencyValue? {
         refreshDb(true)
-        return dao.getCurrencyDateAndSymbol(dateProvider.getDate(), currency.symbol)
+        return dao.getCurrencyDateAndSymbol(DateUtil.stripMinutes(dateProvider.getDate()), currency.symbol)
     }
 
     private suspend fun refreshDb(force: Boolean = false) {

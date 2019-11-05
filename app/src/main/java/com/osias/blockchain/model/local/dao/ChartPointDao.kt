@@ -17,7 +17,7 @@ interface ChartPointDao {
     @Delete
     fun delete(vararg point: ChartPoint)
 
-    @Query("SELECT * FROM chart_point WHERE chart_id = :chartId AND chart_period = :period")
+    @Query("SELECT * FROM chart_point WHERE chart_id = (SELECT CHART_ID FROM CHART_POINT WHERE CHART_ID >= :chartId AND CHART_PERIOD = :period ORDER BY CHART_ID DESC LIMIT 1)")
     suspend fun getAllFromChart(chartId: Date, period: ChartPeriod): List<ChartPoint>
 
 }

@@ -17,10 +17,10 @@ interface ChartDao {
     @Delete
     fun delete(vararg chart: Chart)
 
-    @Query("SELECT * FROM chart WHERE id = :time AND period = :period LIMIT 1")
+    @Query("SELECT * FROM chart WHERE id >= :time AND period = :period ORDER BY id DESC LIMIT 1")
     suspend fun hasChartByTimeAndPeriod(time: Date, period: ChartPeriod): Chart?
 
-    @Query("SELECT * FROM chart WHERE id = :time AND period = :period LIMIT 1")
+    @Query("SELECT * FROM chart WHERE id >= :time AND period = :period ORDER BY id DESC LIMIT 1")
     suspend fun getChartByTimeAndPeriod(time: Date, period: ChartPeriod): Chart
 
 }
