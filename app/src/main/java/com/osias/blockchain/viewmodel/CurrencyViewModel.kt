@@ -8,8 +8,13 @@ import com.osias.blockchain.model.enumeration.ChartPeriod
 import com.osias.blockchain.model.enumeration.CurrencyEnum
 import com.osias.blockchain.model.repository.ChartRepository
 import com.osias.blockchain.model.repository.CurrencyRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import java.text.NumberFormat
 import java.util.*
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 class CurrencyViewModel @Inject constructor(
@@ -19,6 +24,8 @@ class CurrencyViewModel @Inject constructor(
 
     val period = MutableLiveData(ChartPeriod.ONE_MONTH)
     val coin = MutableLiveData(CurrencyEnum.US_DOLLAR)
+    val mainScope = MainScope()
+    val ioScope = CoroutineScope(Dispatchers.IO)
 
     override fun refreshItens() {}
 
@@ -43,6 +50,12 @@ class CurrencyViewModel @Inject constructor(
 
     suspend fun getPoints(chartId: Date, chartPeriod: ChartPeriod): List<ChartPoint> {
         return chartsRepository.getChartPoints(chartId, chartPeriod)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        mainScope.cancel(CancellationException())
+        ioScope.cancel(CancellationException())
     }
 
 }

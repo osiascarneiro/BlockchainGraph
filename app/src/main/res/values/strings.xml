@@ -11,4 +11,27 @@
     <string name="one_year">1 ano</string>
     <string name="two_years">2 anos</string>
     <string name="all_time">Todo o tempo</string>
+
+    <string name="us_dollar">Dólar americano</string>
+    <string name="aus_dollar">Dólar australiano</string>
+    <string name="br_real">Real</string>
+    <string name="ca_dollar">Dólar canadense</string>
+    <string name="sw_franc">franco suíço</string>
+    <string name="ch_peso">Peso chileno</string>
+    <string name="ch_yuan">Yuan chinês</string>
+    <string name="dn_krona">Coroa dinamarquesa</string>
+    <string name="euro">Euro</string>
+    <string name="gp_pound">Libra esterlina</string>
+    <string name="hk_dollar">Dólar de hong kong</string>
+    <string name="in_rupee">Rúpia indiana</string>
+    <string name="is_krona">Coroa islandesa</string>
+    <string name="jp_yen">Yen japonês</string>
+    <string name="sk_won">Won sul-coreano</string>
+    <string name="nz_dollar">Dólar neo-zelandês</string>
+    <string name="pl_zloty">Złoty</string>
+    <string name="ru_ruble">Rublo russo</string>
+    <string name="sd_krona">Coroa sueca</string>
+    <string name="sg_dollar">Dólar de singapura</string>
+    <string name="th_bait">Bate</string>
+    <string name="tw_dollar">Novo dólar taiwanês</string>
 </resources>

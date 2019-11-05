@@ -1,28 +1,30 @@
 package com.osias.blockchain.model.enumeration
 
-enum class CurrencyEnum(val symbol: String) {
+import com.osias.blockchain.R
 
-    US_DOLLAR("USD"),
-    AUS_DOLLAR("AUD"),
-    BR_REAL("BRL"),
-    CA_DOLLAR("CAD"),
-    SW_FRANC("CHF"),
-    CH_PESO("CLP"),
-    CH_YUAN("CNY"),
-    DN_KRONA("DKK"),
-    EURO("EUR"),
-    GB_POUND("GBP"),
-    HK_DOLLAR("HKD"),
-    IN_RUPEE("INR"),
-    IS_KRONA("ISK"),
-    JP_YEN("JPY"),
-    SK_WON("KRW"),
-    NZ_DOLLAR("NZD"),
-    PL_ZLOTY("PLN"),
-    RU_RUBLE("RUB"),
-    SD_KRONA("SEK"),
-    SG_DOLLAR("SGD"),
-    TH_BAIT("THB"),
-    TW_DOLLAR("TWD")
+enum class CurrencyEnum(val symbol: String, val resName: Int) {
+
+    US_DOLLAR("USD", R.string.us_dollar),
+    AUS_DOLLAR("AUD", R.string.aus_dollar),
+    BR_REAL("BRL", R.string.br_real),
+    CA_DOLLAR("CAD", R.string.ca_dollar),
+    SW_FRANC("CHF", R.string.sw_franc),
+    CH_PESO("CLP", R.string.ch_peso),
+    CH_YUAN("CNY", R.string.ch_yuan),
+    DN_KRONA("DKK", R.string.dn_krona),
+    EURO("EUR", R.string.euro),
+    GB_POUND("GBP", R.string.gp_pound),
+    HK_DOLLAR("HKD", R.string.hk_dollar),
+    IN_RUPEE("INR", R.string.in_rupee),
+    IS_KRONA("ISK", R.string.is_krona),
+    JP_YEN("JPY", R.string.jp_yen),
+    SK_WON("KRW", R.string.sk_won),
+    NZ_DOLLAR("NZD", R.string.nz_dollar),
+    PL_ZLOTY("PLN", R.string.pl_zloty),
+    RU_RUBLE("RUB", R.string.ru_ruble),
+    SD_KRONA("SEK", R.string.sd_krona),
+    SG_DOLLAR("SGD", R.string.sg_dollar),
+    TH_BAIT("THB", R.string.th_bait),
+    TW_DOLLAR("TWD", R.string.tw_dollar)
 
 }

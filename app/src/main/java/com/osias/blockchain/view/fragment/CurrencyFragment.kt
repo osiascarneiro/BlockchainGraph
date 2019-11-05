@@ -23,10 +23,10 @@ import com.osias.blockchain.view.dialog.CoinPickerDialog
 import com.osias.blockchain.viewmodel.CurrencyViewModel
 import kotlinx.android.synthetic.main.fragment_actual_currency.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class.java) {
+class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class.java),
+        NumberPicker.OnValueChangeListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,9 +45,7 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         super.onActivityCreated(savedInstanceState)
 
         selectCoinButton.setOnClickListener {
-            CoinPickerDialog.newInstance(NumberPicker.OnValueChangeListener { _, _, newVal ->
-                viewModel.coin.value = CurrencyEnum.values()[newVal]
-            }, viewModel.coin.value).show(childFragmentManager, "Dialog")
+            CoinPickerDialog.newInstance(viewModel.coin.value).show(childFragmentManager, "Dialog")
         }
 
         periodSegmentedButton.setOnCheckedChangeListener { _, buttonId ->
@@ -63,6 +61,10 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         }
     }
 
+    override fun onValueChange(picker: NumberPicker?, oldValue: Int, newVal: Int) {
+        viewModel.coin.value = CurrencyEnum.values()[newVal]
+    }
+
     private fun bindItems() {
         viewModel.coin.observe(this, Observer {
             selectCoinButton.text = getString(R.string.moeda_selecionada, it.symbol)
@@ -75,7 +77,7 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
     }
 
     private fun getAsyncCurrency(coin: CurrencyEnum) {
-        GlobalScope.launch {
+        viewModel.ioScope.launch {
             viewModel.getCurrencyByLocale(coin)?.let { value ->
                 updateLabel(value)
             }
@@ -83,20 +85,20 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
     }
 
     private fun updateLabel(value: CurrencyValue) {
-        GlobalScope.launch(Dispatchers.Main) {
+        viewModel.mainScope.launch {
             lastCurrencyTitle.text = getString(R.string.ultima_cotacao_formatted)
             lastCurrency.text = viewModel.formatCurrency(value.lastValue)
         }
     }
 
     private fun getChart(period: ChartPeriod) {
-        GlobalScope.launch {
+        viewModel.ioScope.launch {
             observePoints(viewModel.getChart(period))
         }
     }
 
     private fun observePoints(chart: Chart) {
-        GlobalScope.launch(Dispatchers.Main) {
+        viewModel.ioScope.launch(Dispatchers.Main) {
             buildGraph(viewModel.getPoints(chart.time, chart.period))
         }
     }
