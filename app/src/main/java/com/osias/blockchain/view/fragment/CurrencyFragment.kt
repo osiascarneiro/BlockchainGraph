@@ -40,7 +40,7 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentActualCurrencyBinding.inflate(inflater)
         return binding.root
     }
@@ -70,7 +70,7 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
     }
 
     override fun onValueChange(picker: NumberPicker?, oldValue: Int, newVal: Int) {
-        viewModel.coin.value = CurrencyEnum.values()[newVal]
+        viewModel.coin.value = CurrencyEnum.entries[newVal]
     }
 
     private fun bindItems() {
