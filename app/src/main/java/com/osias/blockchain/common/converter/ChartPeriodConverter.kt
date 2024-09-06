@@ -5,18 +5,14 @@ import com.osias.blockchain.model.enumeration.ChartPeriod
 
 class ChartPeriodConverter {
 
-    companion object {
-
         @TypeConverter
-        @JvmStatic fun toChartPeriod(name: String): ChartPeriod {
+        fun toChartPeriod(name: String): ChartPeriod {
             return ChartPeriod.valueOf(name)
         }
 
         @TypeConverter
-        @JvmStatic fun fromChartPeriod(period: ChartPeriod): String {
+        fun fromChartPeriod(period: ChartPeriod): String {
             return period.name
         }
-
-    }
 
 }

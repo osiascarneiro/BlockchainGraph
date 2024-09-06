@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.NumberPicker
 import androidx.annotation.MainThread
-import androidx.lifecycle.Observer
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -16,6 +15,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.osias.blockchain.R
 import com.osias.blockchain.common.utils.DateUtil
+import com.osias.blockchain.databinding.FragmentActualCurrencyBinding
 import com.osias.blockchain.model.entity.Chart
 import com.osias.blockchain.model.entity.ChartPoint
 import com.osias.blockchain.model.entity.CurrencyValue
@@ -23,11 +23,13 @@ import com.osias.blockchain.model.enumeration.ChartPeriod
 import com.osias.blockchain.model.enumeration.CurrencyEnum
 import com.osias.blockchain.view.dialog.CoinPickerDialog
 import com.osias.blockchain.viewmodel.CurrencyViewModel
-import kotlinx.android.synthetic.main.fragment_actual_currency.*
 import kotlinx.coroutines.launch
 
 class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class.java),
         NumberPicker.OnValueChangeListener {
+
+    private var _binding: FragmentActualCurrencyBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,17 +41,18 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_actual_currency, container, false)
+        _binding = FragmentActualCurrencyBinding.inflate(inflater)
+        return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        selectCoinButton.setOnClickListener {
+        binding.selectCoinButton.setOnClickListener {
             CoinPickerDialog.newInstance(viewModel.coin.value).show(childFragmentManager, "Dialog")
         }
 
-        periodSegmentedButton.setOnCheckedChangeListener { _, buttonId ->
+        binding.periodSegmentedButton.setOnCheckedChangeListener { _, buttonId ->
             viewModel.period.value = when(buttonId) {
                 R.id.thirty_days -> ChartPeriod.ONE_MONTH
                 R.id.sixty_days -> ChartPeriod.TWO_MONTHS
@@ -61,7 +64,7 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
             }
         }
 
-        forceUpdateFab.setOnClickListener {
+        binding.forceUpdateFab.setOnClickListener {
             forceUpdateCurrency()
         }
     }
@@ -71,31 +74,32 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
     }
 
     private fun bindItems() {
-        viewModel.coin.observe(this, Observer {
-            selectCoinButton.text = getString(R.string.moeda_selecionada, it.symbol)
+        viewModel.coin.observe(this) {
+            binding.selectCoinButton.text = getString(R.string.moeda_selecionada, it.symbol)
             getAsyncCurrency(it)
-        })
+        }
 
-        viewModel.period.observe(this, Observer {
+        viewModel.period.observe(this) {
             getChart(it)
-        })
+        }
     }
 
     @MainThread
     private fun loadingDays(loading: Boolean) {
         when(viewModel.period.value) {
             ChartPeriod.ONE_MONTH ->
-                thirty_days.setText(if(loading) R.string.loading else R.string.thirty_days)
+                binding.thirtyDays.setText(if(loading) R.string.loading else R.string.thirty_days)
             ChartPeriod.TWO_MONTHS ->
-                sixty_days.setText(if(loading) R.string.loading else R.string.sixty_days)
+                binding.sixtyDays.setText(if(loading) R.string.loading else R.string.sixty_days)
             ChartPeriod.SIX_MONTHS ->
-                one_hundred_eighty_days.setText(if(loading) R.string.loading else R.string.one_hundred_eighty_days)
+                binding.oneHundredEightyDays.setText(if(loading) R.string.loading else R.string.one_hundred_eighty_days)
             ChartPeriod.ONE_YEAR ->
-                one_year.setText(if(loading) R.string.loading else R.string.one_year)
+                binding.oneYear.setText(if(loading) R.string.loading else R.string.one_year)
             ChartPeriod.TWO_YEARS ->
-                two_years.setText(if(loading) R.string.loading else R.string.two_years)
+                binding.twoYears.setText(if(loading) R.string.loading else R.string.two_years)
             ChartPeriod.ALL_TIME ->
-                all_time.setText(if(loading) R.string.loading else R.string.all_time)
+                binding.allTime.setText(if(loading) R.string.loading else R.string.all_time)
+            null -> return
         }
     }
 
@@ -117,9 +121,9 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
 
     private fun updateLabel(value: CurrencyValue) {
         viewModel.mainScope.launch {
-            lastCurrencyTitle.text = getString(R.string.ultima_cotacao_formatted)
-            lastCurrency.text = viewModel.formatCurrency(value.lastValue)
-            lastUpdate.text = getString(R.string.last_update, DateUtil.formatDate(value.time))
+            binding.lastCurrencyTitle.text = getString(R.string.ultima_cotacao_formatted)
+            binding.lastCurrency.text = viewModel.formatCurrency(value.lastValue)
+            binding.lastUpdate.text = getString(R.string.last_update, DateUtil.formatDate(value.time))
         }
     }
 
@@ -149,17 +153,17 @@ class CurrencyFragment: BaseFragment<CurrencyViewModel>(CurrencyViewModel::class
             override fun getPointLabel(entry: Entry?): String = ""
         })
 
-        chart.data = lineData
-        chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        chart.xAxis.valueFormatter = object: ValueFormatter() {
+        binding.chart.data = lineData
+        binding.chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        binding.chart.xAxis.valueFormatter = object: ValueFormatter() {
             override fun getAxisLabel(value: Float, axis: AxisBase?): String = viewModel.formatUnixDate(value)
         }
         val yFormatter = object : ValueFormatter() {
             override fun getAxisLabel(value: Float, axis: AxisBase?): String = viewModel.formatCurrency(value.toDouble())
         }
-        chart.axisLeft.valueFormatter = yFormatter
-        chart.axisRight.valueFormatter = yFormatter
-        chart.invalidate()
+        binding.chart.axisLeft.valueFormatter = yFormatter
+        binding.chart.axisRight.valueFormatter = yFormatter
+        binding.chart.invalidate()
     }
 
 }

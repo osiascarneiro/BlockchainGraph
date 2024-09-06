@@ -3,7 +3,8 @@ package com.osias.blockchain.model.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.ForeignKey.CASCADE
+import androidx.room.ForeignKey.Companion.CASCADE
+import androidx.room.Index
 import com.google.gson.annotations.SerializedName
 import com.osias.blockchain.model.enumeration.ChartPeriod
 import java.util.*
@@ -14,7 +15,9 @@ import java.util.*
                               parentColumns = ["id", "period"],
                               childColumns = ["chart_id", "chart_period"],
                               onDelete = CASCADE,
-                              onUpdate = CASCADE)])
+                              onUpdate = CASCADE)],
+    indices = [Index(value = ["chart_id", "chart_period"])]
+)
 data class ChartPoint(
     @SerializedName("x")
     @ColumnInfo(name = "x")

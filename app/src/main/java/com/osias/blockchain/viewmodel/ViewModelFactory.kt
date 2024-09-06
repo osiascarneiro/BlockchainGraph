@@ -13,7 +13,7 @@ class ViewModelFactory<T : BaseViewModel> @Inject constructor(viewModel: T) : Vi
     private val mViewModel: T = viewModel
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return mViewModel as? T ?: throw IllegalArgumentException("Unknow class name")
     }
 

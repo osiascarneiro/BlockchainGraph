@@ -3,7 +3,7 @@ package com.osias.blockchain.model.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import com.google.gson.annotations.SerializedName
-import java.util.*
+import java.util.Date
 
 @Entity(tableName = "currency",
         primaryKeys = ["time","currency_symbol"])

@@ -1,9 +1,14 @@
 package com.osias.blockchain.model.local.dao
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import com.osias.blockchain.model.entity.CurrencyValue
-import java.util.*
+import java.util.Date
 
 @Dao
 interface CurrencyDao {

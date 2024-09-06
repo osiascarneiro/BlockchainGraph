@@ -12,11 +12,11 @@ import com.osias.blockchain.model.local.dao.CurrencyDao
 import com.osias.blockchain.model.repository.ChartRepository
 import com.osias.blockchain.model.repository.CurrencyRepository
 import com.osias.blockchain.model.repository.DateProvider
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
-import java.util.*
+import java.util.Date
 
 class CurrencyViewModelTests: BaseViewModelTests() {
 
@@ -51,7 +51,7 @@ class CurrencyViewModelTests: BaseViewModelTests() {
 
     @Test
     fun `Requisitando moeda atual sem atualizar db`() {
-        runBlockingTest {
+        runTest {
             val valueMock = CurrencyValue("USD", date, 123.43, 123.42, 123.32,123.32, "$")
 
             whenever(currencyDao.getCurrencyDateAndSymbol(date, CurrencyEnum.US_DOLLAR.symbol)).thenReturn(valueMock)
@@ -81,7 +81,7 @@ class CurrencyViewModelTests: BaseViewModelTests() {
 
     @Test
     fun `Requisitando grafico`() {
-        runBlockingTest {
+        runTest {
             val mockChart = Chart(Date(), "Market Price (USD)", "Average USD market price across major bitcoin exchanges.", ChartPeriod.ONE_MONTH)
 
             whenever(chartDao.hasChartByTimeAndPeriod(date, ChartPeriod.ONE_MONTH)).thenReturn(mockChart)
@@ -95,7 +95,7 @@ class CurrencyViewModelTests: BaseViewModelTests() {
 
     @Test
     fun `Requisitando pontos do grafico`() {
-        runBlockingTest {
+        runTest {
             val mockPoints = arrayListOf<ChartPoint>()
             for(i in 0..10) {
                 val point = ChartPoint(123.32f, 123.32f, date, ChartPeriod.ONE_MONTH)
