@@ -123,23 +123,23 @@ class CurrencyViewModelTest {
     // getCurrencyByLocale delegates to repository
     @Test
     fun `getCurrencyByLocale delegates to CurrencyRepository`() {
+        val coin = CurrencyEnum.JP_YEN
+        val value = CurrencyValue(
+            currencyKey = "JPY",
+            time = Date(),
+            fifteenMinutesValue = 4000000.0,
+            buyValue = 4010000.0,
+            sellValue = 3990000.0,
+            lastValue = 4005000.0,
+            symbol = "JPY"
+        )
         runBlocking {
-            val coin = CurrencyEnum.JP_YEN
-            val value = CurrencyValue(
-                currencyKey = "JPY",
-                time = Date(),
-                fifteenMinutesValue = 4000000.0,
-                buyValue = 4010000.0,
-                sellValue = 3990000.0,
-                lastValue = 4005000.0,
-                symbol = "JPY"
-            )
-            whenever(currencyRepository.getValueByCurrency(any())).thenReturn(value)
-
-            val result = viewModel.getCurrencyByLocale(coin)
-
-            assertEquals(value, result)
+            doReturn(value).whenever(currencyRepository).getValueByCurrency(any())
         }
+
+        val result = runBlocking { viewModel.getCurrencyByLocale(coin) }
+
+        assertEquals(value, result)
     }
 
     // getChart delegates to ChartRepository
@@ -148,7 +148,7 @@ class CurrencyViewModelTest {
         val period = ChartPeriod.ONE_YEAR
         val chart = Chart(time = Date(), name = "Market Price", description = "desc", period = period)
         runBlocking {
-            whenever(chartRepository.getCharts(any())).thenReturn(chart)
+            doReturn(chart).whenever(chartRepository).getCharts(any())
         }
 
         val result = runBlocking { viewModel.getChart(period) }

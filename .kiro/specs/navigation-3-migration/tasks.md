@@ -26,7 +26,7 @@ Swap the Nav2 dependency for Nav3 in `app/build.gradle`, then rewrite `AppNavGra
     - Remove all `androidx.navigation.compose` and `androidx.navigation.NavHostController` imports
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 5.1, 5.2, 6.2, 6.3, 7.1, 7.2, 7.3_
 
-- [-] 3. Checkpoint — verify the build and existing tests pass
+- [x] 3. Checkpoint — verify the build and existing tests pass
   - Run `./gradlew assembleDebug` and confirm zero compilation errors
   - Run `./gradlew test` and confirm all existing tests pass without modification
   - _Requirements: 1.4, 5.3, 6.1, 7.3_
