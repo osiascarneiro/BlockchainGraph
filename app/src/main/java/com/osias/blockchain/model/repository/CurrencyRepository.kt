@@ -5,6 +5,8 @@ import com.osias.blockchain.model.entity.CurrencyValue
 import com.osias.blockchain.model.enumeration.CurrencyEnum
 import com.osias.blockchain.model.local.dao.CurrencyDao
 import com.osias.blockchain.model.remote.Service
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class CurrencyRepository(
@@ -23,11 +25,11 @@ class CurrencyRepository(
         return dao.getCurrencyDateAndSymbol(dateProvider.getDate(), currency.symbol)
     }
 
-    private suspend fun refreshDb() {
+    private suspend fun refreshDb() = withContext(Dispatchers.IO) {
         //Limitando a atualizacao dos dados a cada hora
         //TODO: talvez possa ser reduzido
         val dbCurrency = dao.hasCurrencyDate(DateUtil.stripMinutes(dateProvider.getDate()))
-        dbCurrency?.let { return }
+        dbCurrency?.let { return@withContext }
 
         val currency = service.actualCurrency().execute()
         if(!currency.isSuccessful) {

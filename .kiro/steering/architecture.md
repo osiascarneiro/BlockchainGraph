@@ -6,15 +6,17 @@ inclusion: always
 
 ## Pattern
 
-MVVM (Model-View-ViewModel) with a Repository layer. Single-activity navigation via Android Navigation Component.
+MVVM (Model-View-ViewModel) with a Repository layer. Single-activity Compose navigation.
 
 ```
-View (Fragment / Dialog)
-        │  observes LiveData
-        │  calls suspend funs via GlobalScope.launch
+View Layer (Compose)
+  CurrencyScreen / CoinPickerBottomSheet / PeriodSelector / PriceChart
+        │  collectAsState() on StateFlow
+        │  calls selectCoin / selectPeriod via ViewModel
         ▼
 ViewModel (extends BaseViewModel)
-        │  calls suspend funs
+        │  viewModelScope.launch + combine(coin, period)
+        │  emits CurrencyUiState via StateFlow
         ▼
 Repository (extends BaseRepository)
         │                    │
@@ -27,47 +29,50 @@ Remote (Retrofit)      Local (Room)
 
 ## Layer Responsibilities
 
-### View Layer — `view/`
+### View Layer — `ui/`
 
-- **Activities** are thin hosts. `MainActivity` only sets the content view and hosts the `NavHostFragment`. No business logic lives here.
-- **Fragments** extend `BaseFragment` (no generic). Each fragment declares `override val viewModel: XyzViewModel by viewModel()` — Koin resolves the type from the reified call site. No type parameter on the base class is needed or possible due to Kotlin's reified generic constraints.
-- **Dialogs** extend `DialogFragment`. They receive callbacks via constructor parameters (not via fragment result API).
-- Fragments observe ViewModel `LiveData` in a dedicated private `bindItems()` function called from `onCreate`.
-- UI setup (click listeners, etc.) goes in `onViewCreated` — not the deprecated `onActivityCreated`.
-- All fragments and dialogs use **View Binding**. Binding is inflated in `onCreateView`, accessed via `binding?.let {}` in all other lifecycle methods, and nulled in `onDestroyView` to prevent memory leaks.
-- Async work is dispatched with `GlobalScope.launch`. UI updates switch back to `Dispatchers.Main`.
-- Fragments never access repositories or DAOs directly.
+- **MainActivity** is a thin host. It calls `enableEdgeToEdge()` then `setContent { BlockchainGraphTheme { AppNavGraph() } }`. No business logic.
+- **Screens** are `@Composable` functions in `ui/screen/`. They collect `StateFlow` values via `collectAsStateWithLifecycle()` and call ViewModel mutators (`selectCoin`, `selectPeriod`) in response to user actions.
+- **Components** are reusable `@Composable` functions in `ui/component/`: `CoinPickerBottomSheet`, `PeriodSelector`, `PriceChart`.
+- **Navigation** is handled by `AppNavGraph` using Compose Navigation (`NavHost` + `composable()`). No XML nav graph, no `FragmentManager`.
+- Side effects (data loading) use `LaunchedEffect` keyed on state values — no `GlobalScope`, no manual coroutine scope creation inside composables.
+- Every testable node has a `Modifier.testTag(...)` and `semantics { testTagsAsResourceId = true }` at the semantic root.
+- `TestTags` constants objects are co-located with each composable file.
 
 ```kotlin
-// Fragment base — no generic, viewModel contract via abstract property
-abstract class BaseFragment : Fragment() {
-    abstract val viewModel: BaseViewModel
-}
-
-// Subclass — Koin resolves the type from the reified call site
-class CurrencyFragment : BaseFragment() {
-    override val viewModel: CurrencyViewModel by viewModel()
+// Screen — collects StateFlow, calls ViewModel mutators
+@Composable
+fun CurrencyScreen(viewModel: CurrencyViewModel = koinViewModel()) {
+    val coin by viewModel.coin.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // ...
 }
 ```
 
-> Koin 4.x removed the non-reified `viewModel(clazz = ...)` overload because reified generics cannot be passed through inheritance chains in Kotlin. The `by viewModel()` delegate in the subclass is the officially supported pattern — the base class holds the `abstract val viewModel: BaseViewModel` contract, each subclass provides the typed delegate. No generic type parameter on `BaseFragment` is needed.
-
 ### ViewModel Layer — `viewmodel/`
 
-- Extends `BaseViewModel` which provides a shared `error: MutableLiveData<String>` and the abstract `refreshItens()`.
-- Holds UI state as `MutableLiveData` with default values.
-- Exposes `suspend fun` methods that delegate directly to repositories — no business logic beyond formatting.
-- Formatting helpers (`formatCurrency`, `formatUnixDate`) live here because they depend on the current UI state (`coin.value`).
+- Extends `BaseViewModel` which provides `error: StateFlow<String?>` and the abstract `refreshItens()`.
+- Holds UI state as `MutableStateFlow` with private backing properties and public `asStateFlow()` exposure.
+- `CurrencyUiState` is the single state object for `CurrencyScreen`: `isLoading`, `formattedPrice`, `chartPoints`, `errorMessage`.
+- Reactive reload via `combine(_coin, _period).collectLatest { loadData(...) }` in `init` — no manual observer wiring.
+- `selectCoin(coin)` and `selectPeriod(period)` are the only public mutators.
+- All coroutines use `viewModelScope.launch` — never `GlobalScope`.
 - Declared in `appModule` with `viewModel { }`. Never instantiated manually.
-- No `@Inject` annotation needed — Koin resolves constructor parameters via `get()`.
 
 ```kotlin
-class CurrencyViewModel(
-    private val currencyRepository: CurrencyRepository,
-    private val chartsRepository: ChartRepository
-): BaseViewModel() {
-    val period = MutableLiveData(ChartPeriod.ONE_MONTH)
-    val coin   = MutableLiveData(CurrencyEnum.US_DOLLAR)
+class CurrencyViewModel(...) : BaseViewModel() {
+    private val _coin = MutableStateFlow(CurrencyEnum.US_DOLLAR)
+    val coin: StateFlow<CurrencyEnum> = _coin.asStateFlow()
+
+    private val _uiState = MutableStateFlow(CurrencyUiState())
+    val uiState: StateFlow<CurrencyUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            combine(_coin, _period) { c, p -> c to p }
+                .collectLatest { (c, p) -> loadData(c, p) }
+        }
+    }
 }
 ```
 
@@ -81,7 +86,6 @@ class CurrencyViewModel(
 - `DateProvider` interface is injected to allow deterministic date control in tests.
 
 ```kotlin
-// Cache-or-fetch pattern used in every repository
 private suspend fun refreshDb(period: ChartPeriod) {
     val cached = chartDao.hasChartByTimeAndPeriod(dateProvider.getDate(), period)
     cached?.let { return }          // cache hit — skip network
@@ -107,18 +111,12 @@ private suspend fun refreshDb(period: ChartPeriod) {
 - Kotlin `interface` annotated with `@Dao`.
 - Query methods that return a single result or list are `suspend fun`.
 - Insert/update/delete methods are regular (non-suspend) functions.
-- Room annotation processor uses **KSP** (`ksp "androidx.room:room-compiler"`). Never use `kapt` for Room.
+- Room annotation processor uses **KSP**. Never use `kapt` for Room.
 - `hasByX` naming convention for nullable existence checks (returns `null` = not found).
-
-```kotlin
-@Query("SELECT * FROM chart WHERE id = :time AND period = :period LIMIT 1")
-suspend fun hasChartByTimeAndPeriod(time: Date, period: ChartPeriod): Chart?  // null = not cached
-```
 
 #### Database — `model/local/BancoLocal`
 - Single `RoomDatabase` subclass named `BancoLocal`.
 - Registered type converters: `DateConverter`, `ChartPeriodConverter`.
-- `DateConverter.fromDate` strips minutes before storing — this is what enforces hourly cache granularity.
 
 #### Remote — `model/remote/`
 - `Service` is a Retrofit interface. Two endpoints only.
@@ -146,7 +144,27 @@ Single Koin module file:
 
 ## Navigation
 
-Single-activity pattern. `MainActivity` hosts a `NavHostFragment` bound to `res/navigation/nav_graph.xml`. All screen transitions go through the Navigation Component — no `FragmentManager` transactions in activities.
+Single-activity pattern. `MainActivity` hosts a `NavHost` composable defined in `AppNavGraph`. Routes are string constants in `object Routes`. No XML nav graph, no `NavHostFragment`, no `FragmentManager` transactions.
+
+```kotlin
+object Routes { const val CURRENCY = "currency" }
+
+@Composable
+fun AppNavGraph(navController: NavHostController = rememberNavController()) {
+    NavHost(navController, startDestination = Routes.CURRENCY) {
+        composable(Routes.CURRENCY) { CurrencyScreen() }
+    }
+}
+```
+
+---
+
+## Edge-to-Edge and Rotation
+
+- `enableEdgeToEdge()` is called in `MainActivity.onCreate()` before `setContent`.
+- `CurrencyScreen` applies `Modifier.windowInsetsPadding(WindowInsets.safeDrawing)` at the root `Scaffold`.
+- Screen orientation is not locked — both portrait and landscape are supported.
+- `CurrencyViewModel` survives rotation automatically as a `ViewModel`.
 
 ---
 
@@ -171,29 +189,23 @@ Chart cache (daily per period):
     → return DB record by (date, period)
 ```
 
-`DateUtil.stripMinutes()` is the single source of truth for the hourly cache key. `DateConverter.fromDate()` also calls it before persisting, ensuring DB timestamps are always hour-aligned.
-
 ---
 
 ## Testing Architecture
 
-Unit tests mock the boundary interfaces (`Service`, `CurrencyDao`, `ChartDao`, `ChartPointDao`, `DateProvider`) using Mockito-Kotlin. No Android framework is needed for repository or ViewModel tests.
+Unit tests mock the boundary interfaces (`Service`, `CurrencyDao`, `ChartDao`, `ChartPointDao`, `DateProvider`) using Mockito-Kotlin. Composable tests use Robolectric + `createComposeRule()`. Screenshot tests use Roborazzi.
 
-- `InstantTaskExecutorRule` is required in any test that touches `LiveData`.
+- `TestApplication` (in `src/test/`) prevents Koin from auto-starting during Robolectric tests.
+- `KoinTestRule` manages Koin lifecycle in composable tests that need a ViewModel.
 - `DateProvider` is always injected as a mock with a fixed `Date` to make cache logic deterministic.
-- Property-based tests verify invariants across multiple inputs (currencies, periods, dates, call counts) rather than single examples.
+- Property-based tests use Kotest `checkAll` / `Arb` generators with state-driven composables (single `setContent` call, state updated via `runOnUiThread`).
 
 ```
 app/src/test/java/com/osias/blockchain/
-├── repository/
-│   ├── CurrencyRepositoryTest.kt   # cache hit/miss, error delegation
-│   └── ChartRepositoryTest.kt      # cache hit/miss, FK persistence, error delegation
-├── viewmodel/
-│   └── CurrencyViewModelTest.kt    # formatCurrency, formatUnixDate, delegation
-└── property/
-    ├── CurrencyCacheFreshnessPropertyTest.kt   # CP-1: hourly cache invariant
-    ├── ChartCacheFreshnessPropertyTest.kt      # CP-2: daily cache invariant
-    └── PeriodMappingCompletenessPropertyTest.kt # CP-5: button↔period bijection
+├── repository/         # cache hit/miss, error delegation
+├── viewmodel/          # formatCurrency, formatUnixDate, delegation
+├── ui/                 # Robolectric composable tests + Roborazzi screenshot tests
+└── property/           # property-based tests for composables and ViewModel
 ```
 
 ---
@@ -202,12 +214,13 @@ app/src/test/java/com/osias/blockchain/
 
 1. Create `XyzViewModel` extending `BaseViewModel` (no `@Inject`).
 2. Add `viewModel { XyzViewModel(get(), get()) }` to `appModule`.
-3. Create `XyzFragment` extending `BaseFragment` (no generic).
-4. Declare `override val viewModel: XyzViewModel by viewModel()` in the fragment.
-5. Use View Binding: inflate in `onCreateView`, access via `binding?.let {}`, null in `onDestroyView`.
-6. Put click listeners and UI setup in `onViewCreated`, not `onActivityCreated`.
-7. Add the fragment destination to `res/navigation/nav_graph.xml`.
-8. Write unit tests for the ViewModel and any new repository.
+3. Create `XyzScreen` composable in `ui/screen/`.
+4. Define `object XyzScreenTags` with test tag constants in the same file.
+5. Apply `Modifier.testTag(...)` to every testable node; enable `testTagsAsResourceId = true` at the semantic root.
+6. Add `composable(Routes.XYZ) { XyzScreen() }` to `AppNavGraph`.
+7. Write Robolectric unit tests using `onNodeWithTag()` in `ui/XyzScreenTest.kt`.
+8. Write Roborazzi screenshot tests in `ui/XyzScreenshotTest.kt`; run `./gradlew recordRoborazziDebug` to generate baselines.
+9. Write unit tests for the ViewModel and any new repository.
 
 ## Adding a New Repository — Checklist
 

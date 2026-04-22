@@ -58,128 +58,138 @@ class ChartRepositoryTest {
 
     // Task 23.1 — cached chart exists → does NOT trigger network request
     @Test
-    fun `getCharts does not fetch from network when chart is already cached for today and period`() = runBlocking {
-        val period = ChartPeriod.ONE_MONTH
-        val cachedChart = makeChart(period)
+    fun `getCharts does not fetch from network when chart is already cached for today and period`() {
+        runBlocking {
+            val period = ChartPeriod.ONE_MONTH
+            val cachedChart = makeChart(period)
 
-        whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(cachedChart)
-        whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(cachedChart)
+            whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(cachedChart)
+            whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(cachedChart)
 
-        repository.getCharts(period)
+            repository.getCharts(period)
 
-        verify(service, never()).getCurrencyChart(any())
+            verify(service, never()).getCurrencyChart(any())
+        }
     }
 
     // Task 23.1 — second call same day same period reuses cache
     @Test
-    fun `getCharts second call on same day for same period skips network request`() = runBlocking {
-        val period = ChartPeriod.SIX_MONTHS
-        val chart = makeChart(period)
-        val point = makeChartPoint(fixedDate, period)
+    fun `getCharts second call on same day for same period skips network request`() {
+        runBlocking {
+            val period = ChartPeriod.SIX_MONTHS
+            val chart = makeChart(period)
+            val point = makeChartPoint(fixedDate, period)
 
-        val call: Call<Chart> = mock()
-        val chartWithValues = makeChart(period).also { it.values = listOf(point) }
-        whenever(call.execute()).thenReturn(Response.success(chartWithValues))
-        whenever(service.getCurrencyChart(period)).thenReturn(call)
+            val call: Call<Chart> = mock()
+            val chartWithValues = makeChart(period).also { it.values = listOf(point) }
+            whenever(call.execute()).thenReturn(Response.success(chartWithValues))
+            whenever(service.getCurrencyChart(period)).thenReturn(call)
 
-        // First call: no cache
-        whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
-        whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(chart)
+            // First call: no cache
+            whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
+            whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(chart)
 
-        repository.getCharts(period)
+            repository.getCharts(period)
 
-        // Second call: cache now exists
-        whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(chart)
+            // Second call: cache now exists
+            whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(chart)
 
-        repository.getCharts(period)
+            repository.getCharts(period)
 
-        verify(service, times(1)).getCurrencyChart(period)
+            verify(service, times(1)).getCurrencyChart(period)
+        }
     }
 
     // Task 23.2 — chart points are persisted with correct foreign key references
     @Test
-    fun `getCharts persists chart points with correct chart time and period references`() = runBlocking {
-        val period = ChartPeriod.ONE_YEAR
-        val point1 = makeChartPoint(fixedDate, period)
-        val point2 = ChartPoint(1_700_100f, 31000f, fixedDate, period)
-        val chartWithValues = makeChart(period).also { it.values = listOf(point1, point2) }
+    fun `getCharts persists chart points with correct chart time and period references`() {
+        runBlocking {
+            val period = ChartPeriod.ONE_YEAR
+            val point1 = makeChartPoint(fixedDate, period)
+            val point2 = ChartPoint(1_700_100f, 31000f, fixedDate, period)
+            val chartWithValues = makeChart(period).also { it.values = listOf(point1, point2) }
 
-        val call: Call<Chart> = mock()
-        whenever(call.execute()).thenReturn(Response.success(chartWithValues))
-        whenever(service.getCurrencyChart(period)).thenReturn(call)
-        whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
-        whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(chartWithValues)
+            val call: Call<Chart> = mock()
+            whenever(call.execute()).thenReturn(Response.success(chartWithValues))
+            whenever(service.getCurrencyChart(period)).thenReturn(call)
+            whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
+            whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(chartWithValues)
 
-        repository.getCharts(period)
+            repository.getCharts(period)
 
-        // Verify each point was inserted with the correct chart reference
-        val pointCaptor = argumentCaptor<List<ChartPoint>>()
-        verify(chartPointDao, times(2)).insert(pointCaptor.capture())
+            // Verify each point was inserted with the correct chart reference
+            val pointCaptor = argumentCaptor<List<ChartPoint>>()
+            verify(chartPointDao, times(2)).insert(pointCaptor.capture())
 
-        pointCaptor.allValues.flatten().forEach { insertedPoint ->
-            assertEquals(fixedDate, insertedPoint.chartTime)
-            assertEquals(period, insertedPoint.chartPeriod)
+            pointCaptor.allValues.flatten().forEach { insertedPoint ->
+                assertEquals(fixedDate, insertedPoint.chartTime)
+                assertEquals(period, insertedPoint.chartPeriod)
+            }
         }
     }
 
     // Task 23.2 — no cached chart → triggers network request and persists chart
     @Test
-    fun `getCharts fetches from network and persists chart when no cache exists`() = runBlocking {
-        val period = ChartPeriod.TWO_MONTHS
-        val chart = makeChart(period).also { it.values = emptyList() }
+    fun `getCharts fetches from network and persists chart when no cache exists`() {
+        runBlocking {
+            val period = ChartPeriod.TWO_MONTHS
+            val chart = makeChart(period).also { it.values = emptyList() }
 
-        val call: Call<Chart> = mock()
-        whenever(call.execute()).thenReturn(Response.success(chart))
-        whenever(service.getCurrencyChart(period)).thenReturn(call)
-        whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
-        whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(chart)
+            val call: Call<Chart> = mock()
+            whenever(call.execute()).thenReturn(Response.success(chart))
+            whenever(service.getCurrencyChart(period)).thenReturn(call)
+            whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
+            whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(chart)
 
-        repository.getCharts(period)
+            repository.getCharts(period)
 
-        verify(service, times(1)).getCurrencyChart(period)
-        verify(chartDao, times(1)).insert(any<List<Chart>>())
+            verify(service, times(1)).getCurrencyChart(period)
+            verify(chartDao, times(1)).insert(any<List<Chart>>())
+        }
     }
 
     // Network error is propagated via delegate
     @Test
-    fun `getCharts propagates error when network call fails`() = runBlocking {
-        val period = ChartPeriod.ALL_TIME
-        val errorBody: ResponseBody = mock()
-        val call: Call<Chart> = mock()
-        whenever(call.execute()).thenReturn(Response.error(500, errorBody))
-        whenever(service.getCurrencyChart(period)).thenReturn(call)
-        whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
+    fun `getCharts propagates error when network call fails`() {
+        runBlocking {
+            val period = ChartPeriod.ALL_TIME
+            val errorBody: ResponseBody = mock()
+            val call: Call<Chart> = mock()
+            val errorResponse: Response<Chart> = Response.error(500, errorBody)
+            
+            whenever(call.execute()).thenReturn(errorResponse)
+            whenever(service.getCurrencyChart(period)).thenReturn(call)
+            whenever(chartDao.hasChartByTimeAndPeriod(fixedDate, period)).thenReturn(null)
+            whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period)).thenReturn(makeChart(period))
 
-        val delegate: com.osias.blockchain.model.repository.RepositoryErrorDelegate = mock()
-        repository.delegate = delegate
+            val delegate: com.osias.blockchain.model.repository.RepositoryErrorDelegate = mock()
+            repository.delegate = delegate
 
-        // getChartByTimeAndPeriod won't be called on error, but we need to handle the crash
-        // The repository returns early after error, so we stub a fallback
-        whenever(chartDao.getChartByTimeAndPeriod(fixedDate, period))
-            .thenReturn(makeChart(period))
+            try {
+                repository.getCharts(period)
+            } catch (e: Exception) {
+                // expected if DB has no fallback row
+            }
 
-        try {
-            repository.getCharts(period)
-        } catch (e: Exception) {
-            // expected if DB has no fallback row
+            verify(delegate, times(1)).onError(any())
         }
-
-        verify(delegate, times(1)).onError(any())
     }
 
     // getChartPoints returns points from DAO
     @Test
-    fun `getChartPoints returns all points for given chart reference`() = runBlocking {
-        val period = ChartPeriod.TWO_YEARS
-        val points = listOf(
-            makeChartPoint(fixedDate, period),
-            ChartPoint(1_700_200f, 32000f, fixedDate, period)
-        )
-        whenever(chartPointDao.getAllFromChart(fixedDate, period)).thenReturn(points)
+    fun `getChartPoints returns all points for given chart reference`() {
+        runBlocking {
+            val period = ChartPeriod.TWO_YEARS
+            val points = listOf(
+                makeChartPoint(fixedDate, period),
+                ChartPoint(1_700_200f, 32000f, fixedDate, period)
+            )
+            whenever(chartPointDao.getAllFromChart(fixedDate, period)).thenReturn(points)
 
-        val result = repository.getChartPoints(fixedDate, period)
+            val result = repository.getChartPoints(fixedDate, period)
 
-        assertEquals(2, result.size)
-        verify(chartPointDao, times(1)).getAllFromChart(fixedDate, period)
+            assertEquals(2, result.size)
+            verify(chartPointDao, times(1)).getAllFromChart(fixedDate, period)
+        }
     }
 }

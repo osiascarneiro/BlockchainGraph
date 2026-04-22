@@ -95,18 +95,20 @@ class CurrencyCacheFreshnessPropertyTest {
         // Hour 1: no cache
         val dateProvider1: DateProvider = mock { on { getDate() } doReturn hour1 }
         val repo1 = CurrencyRepository(service, dao, dateProvider1)
-        whenever(dao.getCurrencyDateAndSymbol(hour1, currency.symbol)).thenReturn(null, makeValue(hour1))
-        whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(hour1))).thenReturn(null)
-
-        runBlocking { repo1.getValueByCurrency(currency) }
+        runBlocking {
+            whenever(dao.getCurrencyDateAndSymbol(hour1, currency.symbol)).thenReturn(null, makeValue(hour1))
+            whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(hour1))).thenReturn(null)
+            repo1.getValueByCurrency(currency)
+        }
 
         // Hour 2: no cache for this new hour
         val dateProvider2: DateProvider = mock { on { getDate() } doReturn hour2 }
         val repo2 = CurrencyRepository(service, dao, dateProvider2)
-        whenever(dao.getCurrencyDateAndSymbol(hour2, currency.symbol)).thenReturn(null, makeValue(hour2))
-        whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(hour2))).thenReturn(null)
-
-        runBlocking { repo2.getValueByCurrency(currency) }
+        runBlocking {
+            whenever(dao.getCurrencyDateAndSymbol(hour2, currency.symbol)).thenReturn(null, makeValue(hour2))
+            whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(hour2))).thenReturn(null)
+            repo2.getValueByCurrency(currency)
+        }
 
         // Two different hours → two network calls
         verify(service, times(2)).actualCurrency()
@@ -141,16 +143,19 @@ class CurrencyCacheFreshnessPropertyTest {
             val repo = CurrencyRepository(service, dao, dateProvider)
 
             // First call in this hour: no cache
-            whenever(dao.getCurrencyDateAndSymbol(hourDate, currency.symbol))
-                .thenReturn(null)
-                .thenReturn(value)
-            whenever(dao.hasCurrencyDate(strippedHour)).thenReturn(null)
-
-            runBlocking { repo.getValueByCurrency(currency) }
+            runBlocking {
+                whenever(dao.getCurrencyDateAndSymbol(hourDate, currency.symbol))
+                    .thenReturn(null)
+                    .thenReturn(value)
+                whenever(dao.hasCurrencyDate(strippedHour)).thenReturn(null)
+                repo.getValueByCurrency(currency)
+            }
             totalNetworkCalls++
 
             // Subsequent calls in same hour: cache exists
-            whenever(dao.getCurrencyDateAndSymbol(hourDate, currency.symbol)).thenReturn(value)
+            runBlocking {
+                whenever(dao.getCurrencyDateAndSymbol(hourDate, currency.symbol)).thenReturn(value)
+            }
 
             repeat(callsPerHour - 1) {
                 runBlocking { repo.getValueByCurrency(currency) }
@@ -177,15 +182,17 @@ class CurrencyCacheFreshnessPropertyTest {
         val repo = CurrencyRepository(service, dao, dateProvider)
 
         // First call: no cache
-        whenever(dao.getCurrencyDateAndSymbol(date, currency.symbol)).thenReturn(null, value)
-        whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(date))).thenReturn(null)
-
-        runBlocking { repo.getValueByCurrency(currency) }
+        runBlocking {
+            whenever(dao.getCurrencyDateAndSymbol(date, currency.symbol)).thenReturn(null, value)
+            whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(date))).thenReturn(null)
+            repo.getValueByCurrency(currency)
+        }
 
         // Second call: cache exists
-        whenever(dao.getCurrencyDateAndSymbol(date, currency.symbol)).thenReturn(value)
-
-        runBlocking { repo.getValueByCurrency(currency) }
+        runBlocking {
+            whenever(dao.getCurrencyDateAndSymbol(date, currency.symbol)).thenReturn(value)
+            repo.getValueByCurrency(currency)
+        }
 
         verify(service, times(1)).actualCurrency()
     }

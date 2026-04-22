@@ -50,85 +50,93 @@ class CurrencyRepositoryTest {
 
     // Task 22.2 — no cached data → triggers network request
     @Test
-    fun `getValueByCurrency fetches from network when no cached data exists`() = runBlocking {
-        val currency = CurrencyEnum.US_DOLLAR
-        val currencyValue = makeCurrencyValue(currency.symbol)
-        val responseMap = mapOf(currency.symbol to currencyValue)
+    fun `getValueByCurrency fetches from network when no cached data exists`() {
+        runBlocking {
+            val currency = CurrencyEnum.US_DOLLAR
+            val currencyValue = makeCurrencyValue(currency.symbol)
+            val responseMap = mapOf(currency.symbol to currencyValue)
 
-        val call: Call<Map<String, CurrencyValue>> = mock()
-        whenever(call.execute()).thenReturn(Response.success(responseMap))
-        whenever(service.actualCurrency()).thenReturn(call)
+            val call: Call<Map<String, CurrencyValue>> = mock()
+            whenever(call.execute()).thenReturn(Response.success(responseMap))
+            whenever(service.actualCurrency()).thenReturn(call)
 
-        // First DB check returns null (no cache)
-        whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(null, currencyValue)
-        // Hour-stripped check also returns null
-        whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(fixedDate))).thenReturn(null)
+            // First DB check returns null (no cache)
+            whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(null, currencyValue)
+            // Hour-stripped check also returns null
+            whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(fixedDate))).thenReturn(null)
 
-        repository.getValueByCurrency(currency)
+            repository.getValueByCurrency(currency)
 
-        verify(service, times(1)).actualCurrency()
+            verify(service, times(1)).actualCurrency()
+        }
     }
 
     // Task 22.1 — cached data exists → does NOT trigger network request
     @Test
-    fun `getValueByCurrency does not fetch from network when cached data exists`() = runBlocking {
-        val currency = CurrencyEnum.US_DOLLAR
-        val currencyValue = makeCurrencyValue(currency.symbol)
+    fun `getValueByCurrency does not fetch from network when cached data exists`() {
+        runBlocking {
+            val currency = CurrencyEnum.US_DOLLAR
+            val currencyValue = makeCurrencyValue(currency.symbol)
 
-        // DB already has data for this date+symbol
-        whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(currencyValue)
+            // DB already has data for this date+symbol
+            whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(currencyValue)
 
-        repository.getValueByCurrency(currency)
+            repository.getValueByCurrency(currency)
 
-        verify(service, never()).actualCurrency()
+            verify(service, never()).actualCurrency()
+        }
     }
 
     // Task 22.1 — second call within same hour reuses cache
     @Test
-    fun `getValueByCurrency second call within same hour skips network request`() = runBlocking {
-        val currency = CurrencyEnum.EURO
-        val currencyValue = makeCurrencyValue(currency.symbol)
-        val responseMap = mapOf(currency.symbol to currencyValue)
+    fun `getValueByCurrency second call within same hour skips network request`() {
+        runBlocking {
+            val currency = CurrencyEnum.EURO
+            val currencyValue = makeCurrencyValue(currency.symbol)
+            val responseMap = mapOf(currency.symbol to currencyValue)
 
-        val call: Call<Map<String, CurrencyValue>> = mock()
-        whenever(call.execute()).thenReturn(Response.success(responseMap))
-        whenever(service.actualCurrency()).thenReturn(call)
+            val call: Call<Map<String, CurrencyValue>> = mock()
+            whenever(call.execute()).thenReturn(Response.success(responseMap))
+            whenever(service.actualCurrency()).thenReturn(call)
 
-        // First call: no cache
-        whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol))
-            .thenReturn(null)
-            .thenReturn(currencyValue)
-        whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(fixedDate))).thenReturn(null)
+            // First call: no cache
+            whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol))
+                .thenReturn(null)
+                .thenReturn(currencyValue)
+            whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(fixedDate))).thenReturn(null)
 
-        repository.getValueByCurrency(currency)
+            repository.getValueByCurrency(currency)
 
-        // Second call: cache now exists (same hour)
-        whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(currencyValue)
+            // Second call: cache now exists (same hour)
+            whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(currencyValue)
 
-        repository.getValueByCurrency(currency)
+            repository.getValueByCurrency(currency)
 
-        // Network should only have been called once
-        verify(service, times(1)).actualCurrency()
+            // Network should only have been called once
+            verify(service, times(1)).actualCurrency()
+        }
     }
 
     // Task 22.2 — network error is propagated via delegate
     @Test
-    fun `getValueByCurrency propagates error when network call fails`() = runBlocking {
-        val currency = CurrencyEnum.US_DOLLAR
-        val errorBody: ResponseBody = mock()
-        val call: Call<Map<String, CurrencyValue>> = mock()
-        val errorResponse: Response<Map<String, CurrencyValue>> = Response.error(500, errorBody)
+    fun `getValueByCurrency propagates error when network call fails`() {
+        runBlocking {
+            val currency = CurrencyEnum.US_DOLLAR
+            val errorBody: ResponseBody = mock()
+            val call: Call<Map<String, CurrencyValue>> = mock()
+            val errorResponse: Response<Map<String, CurrencyValue>> = Response.error(500, errorBody)
 
-        whenever(call.execute()).thenReturn(errorResponse)
-        whenever(service.actualCurrency()).thenReturn(call)
-        whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(null)
-        whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(fixedDate))).thenReturn(null)
+            whenever(call.execute()).thenReturn(errorResponse)
+            whenever(service.actualCurrency()).thenReturn(call)
+            whenever(dao.getCurrencyDateAndSymbol(fixedDate, currency.symbol)).thenReturn(null)
+            whenever(dao.hasCurrencyDate(DateUtil.stripMinutes(fixedDate))).thenReturn(null)
 
-        val delegate: com.osias.blockchain.model.repository.RepositoryErrorDelegate = mock()
-        repository.delegate = delegate
+            val delegate: com.osias.blockchain.model.repository.RepositoryErrorDelegate = mock()
+            repository.delegate = delegate
 
-        repository.getValueByCurrency(currency)
+            repository.getValueByCurrency(currency)
 
-        verify(delegate, times(1)).onError(any())
+            verify(delegate, times(1)).onError(any())
+        }
     }
 }

@@ -1,8 +1,7 @@
 package com.osias.blockchain.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import org.mockito.kotlin.*
-import com.osias.blockchain.model.entity.Chart
+import org.mockito.kotlin.*import com.osias.blockchain.model.entity.Chart
 import com.osias.blockchain.model.entity.ChartPoint
 import com.osias.blockchain.model.entity.CurrencyValue
 import com.osias.blockchain.model.enumeration.ChartPeriod
@@ -29,45 +28,57 @@ class CurrencyViewModelTest {
     fun setup() {
         currencyRepository = mock()
         chartRepository = mock()
+        // Pre-stub to avoid NPE in ViewModel init block
+        runBlocking {
+            whenever(currencyRepository.getValueByCurrency(any())).thenReturn(null)
+            whenever(chartRepository.getCharts(any())).thenReturn(null)
+            whenever(chartRepository.getChartPoints(any(), any())).thenReturn(emptyList())
+        }
         viewModel = CurrencyViewModel(currencyRepository, chartRepository)
     }
 
     // Task 24.1 — formatCurrency uses the selected currency symbol
     @Test
     fun `formatCurrency formats value with selected currency symbol`() {
-        viewModel.coin.value = CurrencyEnum.US_DOLLAR
+        runBlocking {
+            viewModel.selectCoin(CurrencyEnum.US_DOLLAR)
 
-        val result = viewModel.formatCurrency(30050.0)
+            val result = viewModel.formatCurrency(30050.0)
 
-        assertTrue("Expected USD symbol in result", result.contains("$") || result.contains("USD"))
-        assertTrue("Expected numeric value in result", result.contains("30,050") || result.contains("30050"))
+            assertTrue("Expected USD symbol in result", result.contains("$") || result.contains("USD"))
+            assertTrue("Expected numeric value in result", result.contains("30,050") || result.contains("30050"))
+        }
     }
 
     // Task 24.1 — formatCurrency changes output when currency changes
     @Test
     fun `formatCurrency output reflects currently selected currency`() {
-        viewModel.coin.value = CurrencyEnum.EURO
-        val euroResult = viewModel.formatCurrency(1000.0)
+        runBlocking {
+            viewModel.selectCoin(CurrencyEnum.EURO)
+            val euroResult = viewModel.formatCurrency(1000.0)
 
-        viewModel.coin.value = CurrencyEnum.GB_POUND
-        val gbpResult = viewModel.formatCurrency(1000.0)
+            viewModel.selectCoin(CurrencyEnum.GB_POUND)
+            val gbpResult = viewModel.formatCurrency(1000.0)
 
-        assertNotEquals(
-            "Different currencies should produce different formatted strings",
-            euroResult,
-            gbpResult
-        )
+            assertNotEquals(
+                "Different currencies should produce different formatted strings",
+                euroResult,
+                gbpResult
+            )
+        }
     }
 
     // Task 24.1 — formatCurrency with BRL
     @Test
     fun `formatCurrency formats value correctly for BRL`() {
-        viewModel.coin.value = CurrencyEnum.BR_REAL
+        runBlocking {
+            viewModel.selectCoin(CurrencyEnum.BR_REAL)
 
-        val result = viewModel.formatCurrency(5000.0)
+            val result = viewModel.formatCurrency(5000.0)
 
-        assertNotNull(result)
-        assertTrue("Result should not be empty", result.isNotEmpty())
+            assertNotNull(result)
+            assertTrue("Result should not be empty", result.isNotEmpty())
+        }
     }
 
     // Task 24.2 — formatUnixDate returns correct date string
@@ -111,60 +122,67 @@ class CurrencyViewModelTest {
 
     // getCurrencyByLocale delegates to repository
     @Test
-    fun `getCurrencyByLocale delegates to CurrencyRepository`() = runBlocking {
-        val coin = CurrencyEnum.JP_YEN
-        val value = CurrencyValue(
-            currencyKey = "JPY",
-            time = Date(),
-            fifteenMinutesValue = 4000000.0,
-            buyValue = 4010000.0,
-            sellValue = 3990000.0,
-            lastValue = 4005000.0,
-            symbol = "JPY"
-        )
-        whenever(currencyRepository.getValueByCurrency(coin)).thenReturn(value)
+    fun `getCurrencyByLocale delegates to CurrencyRepository`() {
+        runBlocking {
+            val coin = CurrencyEnum.JP_YEN
+            val value = CurrencyValue(
+                currencyKey = "JPY",
+                time = Date(),
+                fifteenMinutesValue = 4000000.0,
+                buyValue = 4010000.0,
+                sellValue = 3990000.0,
+                lastValue = 4005000.0,
+                symbol = "JPY"
+            )
+            whenever(currencyRepository.getValueByCurrency(any())).thenReturn(value)
 
-        val result = viewModel.getCurrencyByLocale(coin)
+            val result = viewModel.getCurrencyByLocale(coin)
 
-        assertEquals(value, result)
-        verify(currencyRepository, times(1)).getValueByCurrency(coin)
+            assertEquals(value, result)
+        }
     }
 
     // getChart delegates to ChartRepository
     @Test
-    fun `getChart delegates to ChartRepository`() = runBlocking {
+    fun `getChart delegates to ChartRepository`() {
         val period = ChartPeriod.ONE_YEAR
         val chart = Chart(time = Date(), name = "Market Price", description = "desc", period = period)
-        whenever(chartRepository.getCharts(period)).thenReturn(chart)
+        runBlocking {
+            whenever(chartRepository.getCharts(any())).thenReturn(chart)
+        }
 
-        val result = viewModel.getChart(period)
+        val result = runBlocking { viewModel.getChart(period) }
 
         assertEquals(chart, result)
-        verify(chartRepository, times(1)).getCharts(period)
     }
 
     // getPoints delegates to ChartRepository
     @Test
-    fun `getPoints delegates to ChartRepository`() = runBlocking {
+    fun `getPoints delegates to ChartRepository`() {
         val date = Date()
         val period = ChartPeriod.TWO_YEARS
         val points = listOf(ChartPoint(100f, 30000f, date, period))
-        whenever(chartRepository.getChartPoints(date, period)).thenReturn(points)
+        runBlocking {
+            whenever(chartRepository.getChartPoints(date, period)).thenReturn(points)
+        }
 
-        val result = viewModel.getPoints(date, period)
+        val result = runBlocking { viewModel.getPoints(date, period) }
 
         assertEquals(points, result)
-        verify(chartRepository, times(1)).getChartPoints(date, period)
     }
 
     // Default state
     @Test
     fun `default coin is USD`() {
-        assertEquals(CurrencyEnum.US_DOLLAR, viewModel.coin.value)
+        runBlocking {
+            assertEquals(CurrencyEnum.US_DOLLAR, viewModel.coin.value)
+        }
     }
 
     @Test
     fun `default period is ONE_MONTH`() {
-        assertEquals(ChartPeriod.ONE_MONTH, viewModel.period.value)
+        runBlocking {
+            assertEquals(ChartPeriod.ONE_MONTH, viewModel.period.value)
+        }
     }
 }

@@ -18,19 +18,21 @@ Kotlin. No Java source files in the `app/src/main` tree.
 | Enum entries | UPPER_SNAKE_CASE | `ONE_MONTH`, `US_DOLLAR` |
 | DB table names | snake_case string | `"chart_point"`, `"currency"` |
 | DB column names | snake_case string | `"currency_symbol"`, `"last_value"` |
-| Layout files | snake_case | `fragment_actual_currency.xml`, `dialog_coin_picker.xml` |
-| Resource IDs | snake_case | `R.id.thirty_days`, `R.id.selectCoinButton` |
+| Composable test tags | snake_case string | `"currency_screen_select_coin_button"` |
 | Packages | lowercase, no underscores | `com.osias.blockchain.model.entity` |
 
 ## File Organization
 
 - One class per file. File name matches the class name exactly.
-- Base classes are prefixed with `Base`: `BaseFragment`, `BaseViewModel`, `BaseRepository`.
+- Base classes are prefixed with `Base`: `BaseViewModel`, `BaseRepository`.
 - Enumerations live in `model/enumeration/`.
 - Room entities live in `model/entity/`.
 - DAOs live in `model/local/dao/`.
 - Converters (Room TypeConverters) live in `common/converter/`.
 - Utilities live in `common/utils/`.
+- Composable screens live in `ui/screen/`.
+- Reusable composable components live in `ui/component/`.
+- Each composable file co-locates its `TestTags` object in the same file.
 
 ## Classes and Data Classes
 
@@ -80,32 +82,36 @@ enum class CurrencyEnum(val symbol: String) {
 ## Coroutines
 
 - Repository functions that perform I/O are `suspend fun`.
-- View layer dispatches coroutines with `GlobalScope.launch` (current pattern — note: prefer `viewLifecycleOwner.lifecycleScope` for new code).
-- UI updates always switch to `Dispatchers.Main` explicitly.
+- ViewModels use `viewModelScope.launch` for all coroutines — never `GlobalScope`.
+- Composables use `LaunchedEffect` for side effects keyed on state values — never create coroutine scopes manually inside a composable.
 
 ```kotlin
 // Repository — suspend
 suspend fun getCharts(period: ChartPeriod): Chart { ... }
 
-// Fragment — launch on background, switch to Main for UI
-GlobalScope.launch {
-    val chart = viewModel.getChart(period)
-    GlobalScope.launch(Dispatchers.Main) {
-        buildGraph(viewModel.getPoints(chart.time, chart.period))
+// ViewModel — viewModelScope
+init {
+    viewModelScope.launch {
+        combine(_coin, _period) { c, p -> c to p }
+            .collectLatest { (c, p) -> loadData(c, p) }
     }
+}
+
+// Composable — LaunchedEffect for side effects
+LaunchedEffect(coin, period) {
+    // triggered when coin or period changes
 }
 ```
 
 ## Dependency Injection (Koin)
 
-- ViewModels are declared with `viewModel { }` in `AppModule` and injected in fragments via `override val viewModel: XyzViewModel by viewModel()` — no type parameter on `BaseFragment` needed.
+- ViewModels are declared with `viewModel { }` in `AppModule` and injected in composables via `koinViewModel()`.
 - Repositories and singletons are declared with `single { }`.
 - Never use `@Inject` annotations — Koin resolves dependencies through the module DSL.
 - New ViewModels must be added to `appModule` with `viewModel { MyViewModel(get(), get()) }`.
 - New repositories must be added to `appModule` with `single { MyRepository(get(), get()) }`.
 
 ```kotlin
-// Module declaration
 val appModule = module {
     single<Retrofit> { /* build retrofit */ }
     single<Service> { get<Retrofit>().create(Service::class.java) }
@@ -113,35 +119,72 @@ val appModule = module {
     viewModel { CurrencyViewModel(get(), get()) }
 }
 
-// Fragment — ViewModel injected by Koin
-class CurrencyFragment : BaseFragment<CurrencyViewModel>(CurrencyViewModel::class)
-
-// BaseFragment — delegates to Koin
-val viewModel: T by viewModel(cls)
+// Composable — ViewModel injected by Koin
+@Composable
+fun CurrencyScreen(viewModel: CurrencyViewModel = koinViewModel()) { ... }
 ```
 
-## LiveData
+## StateFlow
 
-- ViewModel state is exposed as `MutableLiveData` with a default value set at declaration.
-- Fragments observe LiveData in `bindItems()` (or equivalent private setup function), called from `onCreate`.
+- ViewModel state is exposed as `StateFlow` with private `MutableStateFlow` backing properties.
+- Composables collect `StateFlow` via `collectAsStateWithLifecycle()` (not `collectAsState()`).
+- UI state is consolidated into a single `UiState` data class per screen.
 
 ```kotlin
-val period = MutableLiveData(ChartPeriod.ONE_MONTH)
-val coin   = MutableLiveData(CurrencyEnum.US_DOLLAR)
+// ViewModel
+private val _coin = MutableStateFlow(CurrencyEnum.US_DOLLAR)
+val coin: StateFlow<CurrencyEnum> = _coin.asStateFlow()
+
+private val _uiState = MutableStateFlow(CurrencyUiState())
+val uiState: StateFlow<CurrencyUiState> = _uiState.asStateFlow()
+
+// Composable
+val coin by viewModel.coin.collectAsStateWithLifecycle()
+val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+```
+
+## Compose
+
+- Use `remember { mutableStateOf(...) }` (not `rememberSaveable`) for transient UI state like bottom sheet visibility — it should reset on rotation.
+- Apply `Modifier.testTag("tag")` to every node that tests need to find.
+- Enable `semantics { testTagsAsResourceId = true }` at the semantic root of each composable.
+- Define test tag constants in an `object XyzTags` co-located with the composable file.
+- Never use `!!` inside composables — use `?.let { }` for nullable unwrapping.
+
+```kotlin
+// TestTags co-located with the composable
+object CurrencyScreenTags {
+    const val SELECT_COIN_BUTTON = "currency_screen_select_coin_button"
+    const val LOADING_INDICATOR  = "currency_screen_loading_indicator"
+}
+
+// Transient UI state — resets on rotation (correct behavior)
+var showPicker by remember { mutableStateOf(false) }
+
+// Testable node
+Button(
+    onClick = { showPicker = true },
+    modifier = Modifier.testTag(CurrencyScreenTags.SELECT_COIN_BUTTON)
+) { ... }
 ```
 
 ## Error Handling
 
 - Repositories do not throw exceptions for network errors. They call `delegate?.onError(Error(...))` instead.
+- ViewModels wrap repository calls in `try/catch` and emit error state via `UiState.errorMessage`.
 - Always check `result.isSuccessful` before accessing `result.body()`.
 - Use `?.let { }` to safely unwrap nullable bodies.
 
 ```kotlin
-if (!result.isSuccessful) {
-    delegate?.onError(Error(result.errorBody().toString()))
-} else {
-    result.body()?.let { chart ->
-        // persist
+// ViewModel — catch and emit error state
+private suspend fun loadData(coin: CurrencyEnum, period: ChartPeriod) {
+    _uiState.value = CurrencyUiState(isLoading = true)
+    try {
+        val currency = currencyRepository.getValueByCurrency(coin)
+        // ...
+        _uiState.value = CurrencyUiState(isLoading = false, formattedPrice = ...)
+    } catch (e: Exception) {
+        _uiState.value = CurrencyUiState(isLoading = false, errorMessage = e.message)
     }
 }
 ```
@@ -150,16 +193,10 @@ if (!result.isSuccessful) {
 
 - Prefer `?.let { }` over `if (x != null)` for nullable unwrapping.
 - Use early return with `?.let { return }` to skip logic when a cached value exists.
-- **Never use `!!`** — it is a runtime crash waiting to happen. The only accepted exception is `requireNotNull(x)` in `onCreateView` immediately after assigning the binding, where non-nullability is structurally guaranteed.
-- When multiple properties of a nullable object are needed, unwrap once with `?.let { }` rather than chaining multiple `?.` calls.
+- **Never use `!!`** anywhere in the codebase.
+- When multiple properties of a nullable object are needed, unwrap once with `?.let { }`.
 
 ```kotlin
-// Good — unwrap once, use safely
-binding?.let { b ->
-    b.lastCurrencyTitle.text = "..."
-    b.lastCurrency.text = "..."
-}
-
 // Good — early return cache hit
 val dbChart = chartDao.hasChartByTimeAndPeriod(dateProvider.getDate(), period)
 dbChart?.let { return }
@@ -167,34 +204,6 @@ dbChart?.let { return }
 // Bad — never do this
 binding!!.lastCurrency.text = "..."
 ```
-
-## View Binding
-
-- `viewBinding true` is enabled in `app/build.gradle`.
-- All fragments and dialogs use the generated binding class — never `kotlinx.android.synthetic` (removed) or `findViewById`.
-- Pattern for fragments and dialogs:
-  ```kotlin
-  private var binding: FragmentXyzBinding? = null
-
-  override fun onCreateView(...): View {
-      binding = FragmentXyzBinding.inflate(inflater, container, false)
-      return requireNotNull(binding).root  // requireNotNull instead of !!
-  }
-
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-      binding?.let { b ->
-          // access views via b.viewId
-      }
-  }
-
-  override fun onDestroyView() {
-      super.onDestroyView()
-      binding = null  // avoid memory leaks
-  }
-  ```
-- `requireNotNull(binding)` is the only acceptable place to assert non-null — exclusively in `onCreateView` where the binding was just assigned on the line above.
-- Everywhere else, use `binding?.let { b -> }` or `binding?.viewId` — never `!!`.
-- When multiple views need updating in the same block, use `binding?.let { b -> }` to unwrap once and access all views through `b`.
 
 ## Comments
 

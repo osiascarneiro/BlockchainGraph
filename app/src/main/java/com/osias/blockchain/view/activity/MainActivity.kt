@@ -1,14 +1,22 @@
 package com.osias.blockchain.view.activity
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import com.osias.blockchain.R
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import com.osias.blockchain.ui.navigation.AppNavGraph
+import com.osias.blockchain.ui.theme.BlockchainGraphTheme
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        enableEdgeToEdge()
+        setContent {
+            BlockchainGraphTheme {
+                AppNavGraph()
+            }
+        }
     }
 
 }

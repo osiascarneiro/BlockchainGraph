@@ -18,11 +18,11 @@ Users can:
 
 | Concern | Library / Version |
 |---|---|
-| Language | Kotlin 2.2.0 |
-| Min SDK | 21 (Android 5.0) |
+| Language | Kotlin 2.2.10 |
+| Min SDK | 23 (Android 6.0) |
 | Target SDK | 34 (Android 14) |
 | Compile SDK | 36 |
-| AGP | 9.1.0 |
+| AGP | 9.1.1 |
 | Gradle | 9.4.1 |
 | JDK | 17 |
 | IDE | Android Studio Panda 3 (2025.3.3) |
@@ -30,17 +30,19 @@ Users can:
 | DI | Koin 4.2.0 |
 | Networking | Retrofit 2.11.0 + OkHttp 4.12.0 + Gson |
 | Local DB | Room 2.7.2 |
-| Charts | MPAndroidChart 3.1.0 |
+| UI | Jetpack Compose + Material3 |
+| Compose BOM | 2025.12.01 |
+| Charts | Vico 2.4.3 (compose-m3) |
 | Async | Kotlin Coroutines 1.9.0 |
-| Navigation | Android Navigation Component 2.7.7 |
+| Navigation | Navigation Compose 2.9.0 |
 | Annotation Processing | KSP 2.3.6 |
-| Testing | JUnit 4.13.2, Mockito-Kotlin 5.2.1, AndroidX Test |
+| Testing | JUnit 4.13.2, Mockito-Kotlin 5.2.1, Robolectric 4.13, Kotest Property 5.9.1, Roborazzi 1.59.0 |
 
 ## Package Structure
 
 ```
 com.osias.blockchain
-├── BlockchainGraphApplication.kt   # DaggerApplication entry point
+├── BlockchainGraphApplication.kt   # Application entry point, starts Koin
 ├── common/
 │   ├── converter/                  # Room TypeConverters (Date, ChartPeriod)
 │   └── utils/                      # DateUtil, EnumUtils
@@ -51,11 +53,14 @@ com.osias.blockchain
 │   ├── remote/                     # Retrofit Service interface + EnumRetrofitConverterFactory
 │   └── repository/                 # ChartRepository, CurrencyRepository, BaseRepository, DateProvider
 ├── module/                         # Koin: AppModule (all DI definitions)
+├── ui/
+│   ├── theme/                      # BlockchainGraphTheme (MaterialTheme wrapper)
+│   ├── screen/                     # CurrencyScreen composable
+│   ├── component/                  # CoinPickerBottomSheet, PeriodSelector, PriceChart
+│   └── navigation/                 # AppNavGraph, Routes
 ├── view/
-│   ├── activity/                   # MainActivity (single activity host)
-│   ├── dialog/                     # CoinPickerDialog
-│   └── fragment/                   # BaseFragment, CurrencyFragment
-└── viewmodel/                      # BaseViewModel, CurrencyViewModel, ViewModelFactory
+│   └── activity/                   # MainActivity (ComponentActivity + setContent)
+└── viewmodel/                      # BaseViewModel, CurrencyViewModel, CurrencyUiState
 ```
 
 ## API Endpoints Used
@@ -111,17 +116,37 @@ Defined in `ChartPeriod` enum with `@SerializedName` for Retrofit serialization:
 ## Running Tests
 
 ```bash
-# Unit tests (JVM)
+# Unit tests (JVM) — includes Robolectric composable tests and property tests
 ./gradlew test
 
 # Instrumented tests (device/emulator)
 ./gradlew connectedAndroidTest
+
+# Record Roborazzi screenshot baselines
+./gradlew recordRoborazziDebug
+
+# Verify screenshots against recorded baselines
+./gradlew verifyRoborazziDebug
 ```
 
 Test files are under `app/src/test/java/com/osias/blockchain/`:
 - `repository/CurrencyRepositoryTest.kt`
 - `repository/ChartRepositoryTest.kt`
 - `viewmodel/CurrencyViewModelTest.kt`
+- `ui/CurrencyScreenTest.kt`
+- `ui/CoinPickerBottomSheetTest.kt`
+- `ui/PeriodSelectorTest.kt`
+- `ui/PriceChartTest.kt`
+- `ui/CurrencyScreenScreenshotTest.kt`
+- `ui/CoinPickerScreenshotTest.kt`
+- `ui/PeriodSelectorScreenshotTest.kt`
+- `ui/PriceChartScreenshotTest.kt`
 - `property/CurrencyCacheFreshnessPropertyTest.kt`
 - `property/ChartCacheFreshnessPropertyTest.kt`
-- `property/PeriodMappingCompletenessPropertyTest.kt`
+- `property/CurrencyScreenPropertyTest.kt`
+- `property/CoinPickerPropertyTest.kt`
+- `property/PeriodSelectorPropertyTest.kt`
+- `property/PriceChartPropertyTest.kt`
+- `property/CurrencyViewModelPropertyTest.kt`
+
+Screenshot baselines are stored under `app/src/test/snapshots/`.

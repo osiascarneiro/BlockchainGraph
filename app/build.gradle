@@ -1,5 +1,16 @@
-apply plugin: 'com.android.application'
-apply plugin: 'com.google.devtools.ksp'
+plugins {
+    id 'com.android.application'
+    id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.2.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.2.10'
+    id 'io.github.takahirom.roborazzi'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 android {
     namespace 'com.osias.blockchain'
@@ -15,7 +26,11 @@ android {
     }
     buildFeatures {
         buildConfig true
-        viewBinding true
+        compose true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     buildTypes {
         staging {
@@ -28,6 +43,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            all {
+                maxParallelForks = 1
+                forkEvery = 1
+            }
+        }
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
@@ -35,14 +65,23 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
-    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
-    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
-    implementation "androidx.appcompat:appcompat:$app_compat_version"
-    implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
     implementation "androidx.core:core-ktx:$androidx_core_version"
 
-    implementation "com.github.PhilJay:MPAndroidChart:v$charts_version"
+    // Compose BOM — manages all androidx.compose.* versions
+    implementation platform("androidx.compose:compose-bom:2025.12.01")
+    implementation "androidx.compose.ui:ui"
+    implementation "androidx.compose.material3:material3"
+    implementation "androidx.compose.ui:ui-tooling-preview"
+    debugImplementation "androidx.compose.ui:ui-tooling"
+
+    // Compose integrations (versioned outside BOM)
+    implementation "androidx.activity:activity-compose:1.10.0"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.9.0"
+    implementation "androidx.navigation3:navigation3-runtime:1.1.1"
+    implementation "androidx.navigation3:navigation3-ui:1.1.1"
+
+    // Vico charts (native Compose, replaces MPAndroidChart)
+    implementation "com.patrykandpatrick.vico:compose-m3:2.4.3"
 
     // Room
     implementation "androidx.room:room-runtime:$room_version"
@@ -56,12 +95,22 @@ dependencies {
 
     // Koin
     implementation "io.insert-koin:koin-android:$koin_version"
+    implementation "io.insert-koin:koin-androidx-compose:$koin_version"
 
     // Testing
     testImplementation "junit:junit:$junit_version"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$mockito_kotlin_version"
     testImplementation "androidx.arch.core:core-testing:$arch_version"
+    testImplementation "org.robolectric:robolectric:4.13"
+    testImplementation "io.kotest:kotest-property:5.9.1"
+    testImplementation platform("androidx.compose:compose-bom:2025.12.01")
+    testImplementation "androidx.compose.ui:ui-test-junit4"
+    testImplementation "io.insert-koin:koin-test:$koin_version"
+    testImplementation "io.insert-koin:koin-test-junit4:$koin_version"
+    testImplementation "io.github.takahirom.roborazzi:roborazzi-compose:$roborazzi_version"
+    testImplementation "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
+    debugImplementation "androidx.compose.ui:ui-test-manifest"
     androidTestImplementation "androidx.test.ext:junit:$androidx_ext_test_version"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_espresso_version"
 }

@@ -81,16 +81,20 @@ class ChartCacheFreshnessPropertyTest {
         // Day 1
         val dp1: DateProvider = mock { on { getDate() } doReturn day1 }
         val repo1 = ChartRepository(service, chartDao, chartPointDao, dp1)
-        whenever(chartDao.hasChartByTimeAndPeriod(day1, period)).thenReturn(null)
-        whenever(chartDao.getChartByTimeAndPeriod(day1, period)).thenReturn(chart1)
-        runBlocking { repo1.getCharts(period) }
+        runBlocking {
+            whenever(chartDao.hasChartByTimeAndPeriod(day1, period)).thenReturn(null)
+            whenever(chartDao.getChartByTimeAndPeriod(day1, period)).thenReturn(chart1)
+            repo1.getCharts(period)
+        }
 
         // Day 2
         val dp2: DateProvider = mock { on { getDate() } doReturn day2 }
         val repo2 = ChartRepository(service, chartDao, chartPointDao, dp2)
-        whenever(chartDao.hasChartByTimeAndPeriod(day2, period)).thenReturn(null)
-        whenever(chartDao.getChartByTimeAndPeriod(day2, period)).thenReturn(chart2)
-        runBlocking { repo2.getCharts(period) }
+        runBlocking {
+            whenever(chartDao.hasChartByTimeAndPeriod(day2, period)).thenReturn(null)
+            whenever(chartDao.getChartByTimeAndPeriod(day2, period)).thenReturn(chart2)
+            repo2.getCharts(period)
+        }
 
         verify(service, times(2)).getCurrencyChart(period)
     }
@@ -111,8 +115,10 @@ class ChartCacheFreshnessPropertyTest {
             val call: Call<Chart> = mock()
             whenever(call.execute()).thenReturn(Response.success(chart.also { it.values = emptyList() }))
             whenever(service.getCurrencyChart(period)).thenReturn(call)
-            whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(null)
-            whenever(chartDao.getChartByTimeAndPeriod(date, period)).thenReturn(chart)
+            runBlocking {
+                whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(null)
+                whenever(chartDao.getChartByTimeAndPeriod(date, period)).thenReturn(chart)
+            }
         }
 
         val repo = ChartRepository(service, chartDao, chartPointDao, dateProvider)
@@ -150,16 +156,14 @@ class ChartCacheFreshnessPropertyTest {
             whenever(call.execute()).thenReturn(Response.success(chart.also { it.values = emptyList() }))
             whenever(service.getCurrencyChart(period)).thenReturn(call)
 
-            // First call: no cache
-            whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(null)
-            whenever(chartDao.getChartByTimeAndPeriod(date, period)).thenReturn(chart)
-
             val repo = ChartRepository(service, chartDao, chartPointDao, dateProvider)
 
             runBlocking { repo.getCharts(period) }
 
             // Subsequent calls: cache exists
-            whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(chart)
+            runBlocking {
+                whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(chart)
+            }
 
             repeat(n - 1) {
                 runBlocking { repo.getCharts(period) }
@@ -182,15 +186,18 @@ class ChartCacheFreshnessPropertyTest {
         whenever(service.getCurrencyChart(period)).thenReturn(call)
 
         // First call: no cache
-        whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(null)
-        whenever(chartDao.getChartByTimeAndPeriod(date, period)).thenReturn(chart)
-
         val repo = ChartRepository(service, chartDao, chartPointDao, dateProvider)
-        runBlocking { repo.getCharts(period) }
+        runBlocking {
+            whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(null)
+            whenever(chartDao.getChartByTimeAndPeriod(date, period)).thenReturn(chart)
+            repo.getCharts(period)
+        }
 
         // Second call: cache exists
-        whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(chart)
-        runBlocking { repo.getCharts(period) }
+        runBlocking {
+            whenever(chartDao.hasChartByTimeAndPeriod(date, period)).thenReturn(chart)
+            repo.getCharts(period)
+        }
 
         verify(service, times(1)).getCurrencyChart(period)
     }

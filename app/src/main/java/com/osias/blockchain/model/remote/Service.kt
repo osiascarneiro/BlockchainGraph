@@ -12,7 +12,7 @@ interface Service  {
     @GET("ticker")
     fun actualCurrency(): Call<Map<String, CurrencyValue>>
 
-    @GET("charts/transactions-per-second?format=json")
+    @GET("charts/market-price?format=json")
     fun getCurrencyChart(@Query("timespan") time: ChartPeriod): Call<Chart>
 
 }

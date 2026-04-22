@@ -6,6 +6,8 @@ import com.osias.blockchain.model.enumeration.ChartPeriod
 import com.osias.blockchain.model.local.dao.ChartDao
 import com.osias.blockchain.model.local.dao.ChartPointDao
 import com.osias.blockchain.model.remote.Service
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class ChartRepository(
@@ -32,9 +34,9 @@ class ChartRepository(
         return chartPointDao.getAllFromChart(chartId, chartPeriod)
     }
 
-    private suspend fun refreshDb(period: ChartPeriod) {
+    private suspend fun refreshDb(period: ChartPeriod) = withContext(Dispatchers.IO) {
         val dbChart = chartDao.hasChartByTimeAndPeriod(dateProvider.getDate(), period)
-        dbChart?.let { return }
+        dbChart?.let { return@withContext }
 
         val result = service.getCurrencyChart(period).execute()
         if(!result.isSuccessful) {

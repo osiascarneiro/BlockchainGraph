@@ -1,6 +1,6 @@
 package com.osias.blockchain.viewmodel
 
-import com.nhaarman.mockitokotlin2.whenever
+import org.mockito.kotlin.whenever
 import com.osias.blockchain.model.entity.Chart
 import com.osias.blockchain.model.entity.ChartPoint
 import com.osias.blockchain.model.entity.CurrencyValue
@@ -12,7 +12,8 @@ import com.osias.blockchain.model.local.dao.CurrencyDao
 import com.osias.blockchain.model.repository.ChartRepository
 import com.osias.blockchain.model.repository.CurrencyRepository
 import com.osias.blockchain.model.repository.DateProvider
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
@@ -43,28 +44,30 @@ class CurrencyViewModelTests: BaseViewModelTests() {
     @Before
     override fun setUp() {
         super.setUp()
-        whenever(dateProvider.getDate()).thenReturn(date)
+        runBlocking {
+            whenever(dateProvider.getDate()).thenReturn(date)
+        }
         chartRepository = ChartRepository(blockchainService, chartDao, chartPointDao, dateProvider)
         currencyRepository = CurrencyRepository(blockchainService, currencyDao, dateProvider)
         viewModel = CurrencyViewModel(currencyRepository, chartRepository)
     }
 
     @Test
-    fun `Requisitando moeda atual sem atualizar db`() {
-        runBlockingTest {
-            val valueMock = CurrencyValue("USD", date, 123.43, 123.42, 123.32,123.32, "$")
+    fun `Requisitando moeda atual sem atualizar db`() = runTest {
+        val valueMock = CurrencyValue("USD", date, 123.43, 123.42, 123.32,123.32, "$")
 
+        runBlocking {
             whenever(currencyDao.getCurrencyDateAndSymbol(date, CurrencyEnum.US_DOLLAR.symbol)).thenReturn(valueMock)
-
-            val value = viewModel.getCurrencyByLocale(CurrencyEnum.US_DOLLAR)
-
-            assert(value == valueMock)
         }
+
+        val value = viewModel.getCurrencyByLocale(CurrencyEnum.US_DOLLAR)
+
+        assert(value == valueMock)
     }
 
     @Test
-    fun `Formatando moeda`() {
-        viewModel.coin.value = CurrencyEnum.US_DOLLAR
+    fun `Formatando moeda`() = runTest {
+        viewModel.selectCoin(CurrencyEnum.US_DOLLAR)
         val usDollar = viewModel.formatCurrency(12.34)
 
         assert(usDollar == "$12.34")
@@ -80,33 +83,33 @@ class CurrencyViewModelTests: BaseViewModelTests() {
     }
 
     @Test
-    fun `Requisitando grafico`() {
-        runBlockingTest {
-            val mockChart = Chart(Date(), "Market Price (USD)", "Average USD market price across major bitcoin exchanges.", ChartPeriod.ONE_MONTH)
+    fun `Requisitando grafico`() = runTest {
+        val mockChart = Chart(Date(), "Market Price (USD)", "Average USD market price across major bitcoin exchanges.", ChartPeriod.ONE_MONTH)
 
+        runBlocking {
             whenever(chartDao.hasChartByTimeAndPeriod(date, ChartPeriod.ONE_MONTH)).thenReturn(mockChart)
             whenever(chartDao.getChartByTimeAndPeriod(date, ChartPeriod.ONE_MONTH)).thenReturn(mockChart)
-
-            val chart = viewModel.getChart(ChartPeriod.ONE_MONTH)
-
-            assert(chart == mockChart)
         }
+
+        val chart = viewModel.getChart(ChartPeriod.ONE_MONTH)
+
+        assert(chart == mockChart)
     }
 
     @Test
-    fun `Requisitando pontos do grafico`() {
-        runBlockingTest {
-            val mockPoints = arrayListOf<ChartPoint>()
-            for(i in 0..10) {
-                val point = ChartPoint(123.32f, 123.32f, date, ChartPeriod.ONE_MONTH)
-                mockPoints.add(point)
-            }
-
-            whenever(chartPointDao.getAllFromChart(date, ChartPeriod.ONE_MONTH)).thenReturn(mockPoints)
-
-            val points = viewModel.getPoints(date, ChartPeriod.ONE_MONTH)
-
-            assert(points == mockPoints)
+    fun `Requisitando pontos do grafico`() = runTest {
+        val mockPoints = arrayListOf<ChartPoint>()
+        for(i in 0..10) {
+            val point = ChartPoint(123.32f, 123.32f, date, ChartPeriod.ONE_MONTH)
+            mockPoints.add(point)
         }
+
+        runBlocking {
+            whenever(chartPointDao.getAllFromChart(date, ChartPeriod.ONE_MONTH)).thenReturn(mockPoints)
+        }
+
+        val points = viewModel.getPoints(date, ChartPeriod.ONE_MONTH)
+
+        assert(points == mockPoints)
     }
 }
