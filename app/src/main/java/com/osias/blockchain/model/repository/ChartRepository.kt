@@ -43,11 +43,11 @@ class ChartRepository(
             result.body()?.let { chart ->
                 chart.period = period
                 chart.time = dateProvider.getDate()
-                chartDao.insert(chart)
+                chartDao.insert(listOf(chart))
                 chart.values?.forEach {
                     it.chartTime = chart.time
                     it.chartPeriod = chart.period
-                    chartPointDao.insert(it)
+                    chartPointDao.insert(listOf(it))
                 }
             }
         }

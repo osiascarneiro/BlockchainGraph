@@ -9,18 +9,17 @@ import java.util.*
 interface ChartDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg chart: Chart)
+    fun insert(charts: List<Chart>)
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun update(vararg chart: Chart)
+    fun update(charts: List<Chart>)
 
     @Delete
-    fun delete(vararg chart: Chart)
+    fun delete(charts: List<Chart>)
 
     @Query("SELECT * FROM chart WHERE id = :time AND period = :period LIMIT 1")
     suspend fun hasChartByTimeAndPeriod(time: Date, period: ChartPeriod): Chart?
 
     @Query("SELECT * FROM chart WHERE id = :time AND period = :period LIMIT 1")
     suspend fun getChartByTimeAndPeriod(time: Date, period: ChartPeriod): Chart
-
 }

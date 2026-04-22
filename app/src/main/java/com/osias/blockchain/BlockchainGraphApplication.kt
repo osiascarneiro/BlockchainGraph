@@ -1,13 +1,19 @@
 package com.osias.blockchain
 
-import com.osias.blockchain.module.DaggerApiComponent
-import dagger.android.AndroidInjector
-import dagger.android.support.DaggerApplication
+import android.app.Application
+import com.osias.blockchain.module.appModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
 
-class BlockchainGraphApplication: DaggerApplication() {
+class BlockchainGraphApplication : Application() {
 
-    override fun applicationInjector(): AndroidInjector<out DaggerApplication> = DaggerApiComponent
-                                                                                .factory()
-                                                                                .create(this)
-
+    override fun onCreate() {
+        super.onCreate()
+        startKoin {
+            androidLogger()
+            androidContext(this@BlockchainGraphApplication)
+            modules(appModule)
+        }
+    }
 }

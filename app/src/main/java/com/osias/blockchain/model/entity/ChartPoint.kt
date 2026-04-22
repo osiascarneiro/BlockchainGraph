@@ -3,7 +3,7 @@ package com.osias.blockchain.model.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.ForeignKey.CASCADE
+import androidx.room.ForeignKey.Companion.CASCADE
 import com.google.gson.annotations.SerializedName
 import com.osias.blockchain.model.enumeration.ChartPeriod
 import java.util.*

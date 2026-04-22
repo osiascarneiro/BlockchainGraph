@@ -10,12 +10,11 @@ import com.osias.blockchain.model.repository.ChartRepository
 import com.osias.blockchain.model.repository.CurrencyRepository
 import java.text.NumberFormat
 import java.util.*
-import javax.inject.Inject
 
-class CurrencyViewModel @Inject constructor(
+class CurrencyViewModel(
     private val currencyRepository: CurrencyRepository,
     private val chartsRepository: ChartRepository
-): BaseViewModel() {
+) : BaseViewModel() {
 
     val period = MutableLiveData(ChartPeriod.ONE_MONTH)
     val coin = MutableLiveData(CurrencyEnum.US_DOLLAR)

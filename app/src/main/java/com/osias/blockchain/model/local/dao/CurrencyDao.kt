@@ -21,11 +21,11 @@ interface CurrencyDao {
     suspend fun getCurrencyDateAndSymbol(date: Date, currency: String): CurrencyValue?
 
     @Update
-    fun updateCurrencies(vararg currency: CurrencyValue)
+    fun updateCurrencies(currencies: List<CurrencyValue>)
 
     @Delete
-    fun deleteCurrencies(vararg currency: CurrencyValue)
+    fun deleteCurrencies(currencies: List<CurrencyValue>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertCurrency(currency: CurrencyValue)
+    fun insertCurrency(currencies: List<CurrencyValue>)
 }

@@ -38,7 +38,7 @@ class CurrencyRepository(
                     val currencyDb = it.value
                     currencyDb.currencyKey = it.key
                     currencyDb.time = dateProvider.getDate()
-                    dao.insertCurrency(currencyDb)
+                    dao.insertCurrency(listOf(currencyDb))
                 }
             }
         }

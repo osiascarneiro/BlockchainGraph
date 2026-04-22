@@ -9,15 +9,14 @@ import java.util.*
 interface ChartPointDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg point: ChartPoint)
+    fun insert(points: List<ChartPoint>)
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun update(vararg point: ChartPoint)
+    fun update(points: List<ChartPoint>)
 
     @Delete
-    fun delete(vararg point: ChartPoint)
+    fun delete(points: List<ChartPoint>)
 
     @Query("SELECT * FROM chart_point WHERE chart_id = :chartId AND chart_period = :period")
     suspend fun getAllFromChart(chartId: Date, period: ChartPeriod): List<ChartPoint>
-
 }
